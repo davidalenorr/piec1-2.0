@@ -3,7 +3,7 @@
 <head>
     <title>Cadastrar Aluno</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
 </head>
 <body>
     <div class="container">
@@ -20,7 +20,7 @@
             <label for="id_matricula">Número da Matrícula</label>
             <input type="text" name="matricula" id="id_matricula" required placeholder="Ex: 20250001001" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
 
-            <label for="id_nome">Nome Completo</label>
+            <label for="id_nome">Nome completo do aluno</label>
             <input type="text" name="nome" id="id_nome" required placeholder="Nome completo do aluno" pattern="^[A-Za-zÀ-ÿ\s]+$" title="O nome não pode conter números.">
 
             <button type="submit" class="btn">Cadastrar</button>

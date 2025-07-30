@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Questão</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=9">
+</head>
+<body>
+    <div class="container">
+        <div style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        <h2>Editar Questão</h2>
+        
+        <div class="questao-form">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="disciplina">📚 Disciplina:</label>
+                    <select name="disciplina" id="disciplina" disabled>
+                        {% for disciplina in disciplinas %}
+                            <option value="{{ disciplina.nome }}" {% if disciplina.nome == questao.disciplina_nome %}selected{% endif %}>
+                                {{ disciplina.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: rgba(255, 255, 255, 0.7); font-style: italic;">A disciplina não pode ser alterada após a criação da questão.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="enunciado">📝 Enunciado da Questão:</label>
+                    <textarea name="enunciado" id="enunciado" rows="4" required placeholder="Digite o enunciado da questão...">{{ questao.enunciado }}</textarea>
+                </div>
+                
+                <div class="alternativas-section">
+                    <h3 style="color: #6dd5fa; margin-bottom: 20px;">📋 Alternativas</h3>
+                    
+                    <div class="form-group">
+                        <label for="alternativa_a">A)</label>
+                        <input type="text" name="alternativa_a" id="alternativa_a" value="{{ questao.alternativa_a }}" required placeholder="Digite a alternativa A...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alternativa_b">B)</label>
+                        <input type="text" name="alternativa_b" id="alternativa_b" value="{{ questao.alternativa_b }}" required placeholder="Digite a alternativa B...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alternativa_c">C)</label>
+                        <input type="text" name="alternativa_c" id="alternativa_c" value="{{ questao.alternativa_c }}" required placeholder="Digite a alternativa C...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alternativa_d">D)</label>
+                        <input type="text" name="alternativa_d" id="alternativa_d" value="{{ questao.alternativa_d }}" required placeholder="Digite a alternativa D...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alternativa_e">E)</label>
+                        <input type="text" name="alternativa_e" id="alternativa_e" value="{{ questao.alternativa_e }}" required placeholder="Digite a alternativa E...">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="resposta_correta">✅ Resposta Correta:</label>
+                    <select name="resposta_correta" id="resposta_correta" required>
+                        <option value="A" {% if questao.resposta_correta == 'A' %}selected{% endif %}>A</option>
+                        <option value="B" {% if questao.resposta_correta == 'B' %}selected{% endif %}>B</option>
+                        <option value="C" {% if questao.resposta_correta == 'C' %}selected{% endif %}>C</option>
+                        <option value="D" {% if questao.resposta_correta == 'D' %}selected{% endif %}>D</option>
+                        <option value="E" {% if questao.resposta_correta == 'E' %}selected{% endif %}>E</option>
+                    </select>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn">💾 Salvar Alterações</button>
+                    {% if disciplina_filtro %}
+                        <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina_filtro }}" class="back-link" style="margin-left: 15px;">Cancelar</a>
+                    {% else %}
+                        <a href="{% url 'lista_questoes' %}" class="back-link" style="margin-left: 15px;">Cancelar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

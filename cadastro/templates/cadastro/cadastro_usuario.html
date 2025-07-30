@@ -3,7 +3,7 @@
 <head>
     <title>Cadastro de Usuário</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=9">
     <script>
         function cpfMask(input) {
             input.value = input.value.replace(/\D/g, '').slice(0,11);
@@ -21,25 +21,15 @@
         {% endif %}
         <form method="post">
             {% csrf_token %}
-            <label for="cpf">CPF (será o usuário de login)</label>
             <input type="text" name="cpf" id="cpf" required placeholder="Digite o CPF" maxlength="11" oninput="cpfMask(this)">
-
-            <label for="nome">Nome completo</label>
             <input type="text" name="nome" id="nome" required placeholder="Digite o nome completo">
-
-            <label for="rg">RG</label>
             <input type="text" name="rg" id="rg" required placeholder="Digite o RG" maxlength="7" oninput="rgMask(this)">
-
-            <label for="email">Email</label>
             <input type="email" name="email" id="email" required placeholder="Digite o email">
-
-            <label for="senha">Senha</label>
             <input type="password" name="senha" id="senha" required placeholder="Digite a senha">
-
             <button type="submit" class="btn">Cadastrar</button>
         </form>
-        <a href="{% url 'login' %}" class="link">Já tem conta? Faça login</a>
-        <a href="{% url 'home' %}" class="link">Voltar à Home</a>
+        <a href="{% url 'login' %}">Já tem conta? Faça login</a>
+        <a href="{% url 'home' %}">Voltar à Home</a>
     </div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <title>Questões Cadastradas</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
 </head>
 <body>
     <div class="container">
@@ -15,7 +15,13 @@
         {% if questoes %}
             {% for questao in questoes %}
                 <div class="questao-card" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                    <h3>Questão {{ forloop.counter }}</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">Questão {{ forloop.counter }}</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="editarQuestao('{{ questao.id }}')" class="btn-small" style="background: #ffc107; color: #212529;">✏️ Editar</button>
+                            <button onclick="excluirQuestao('{{ questao.id }}')" class="btn-small" style="background: #dc3545; color: white;">🗑️ Excluir</button>
+                        </div>
+                    </div>
                     <p><strong>Disciplina:</strong> {{ questao.disciplina_nome }}</p>
                     <p><strong>Enunciado:</strong> {{ questao.enunciado }}</p>
                     
@@ -53,9 +59,63 @@
                 {% endif %}
             </div>
             <div style="text-align: center;">
-                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+                {% if disciplina_filtro %}
+                    <a href="{% url 'detalhe_disciplina_por_nome' disciplina_filtro %}" class="back-link">🔙 Voltar à Disciplina</a>
+                {% else %}
+                    <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+                {% endif %}
             </div>
         </div>
     </div>
 </body>
 </html>
+
+<script>
+function editarQuestao(questaoId) {
+    const disciplina = '{{ disciplina_filtro|default:"" }}';
+    if (disciplina) {
+        window.location.href = `/cadastro/questao/editar/${questaoId}/?disciplina=${disciplina}`;
+    } else {
+        window.location.href = `/cadastro/questao/editar/${questaoId}/`;
+    }
+}
+
+function excluirQuestao(questaoId) {
+    if (confirm('Tem certeza que deseja excluir esta questão? Esta ação não pode ser desfeita.')) {
+        fetch(`/cadastro/questao/excluir/${questaoId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Questão excluída com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro ao excluir questão.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao excluir questão.');
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Provas - Sistema de Cadastro</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'cadastro/style.css' %}?v=6">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lista de Provas{% if disciplina_filtro %} - {{ disciplina_filtro }}{% endif %}</h1>
+            <nav style="display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap;">
+                {% if disciplina_filtro %}
+                    <a href="{% url 'detalhe_disciplina_por_nome' disciplina_filtro %}" class="btn-nav">Voltar à Disciplina</a>
+                    <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina_filtro }}" class="btn-nav">Gerar Nova Prova</a>
+                {% else %}
+                    <a href="{% url 'index' %}" class="btn-nav">Voltar ao Início</a>
+                    <a href="{% url 'gerar_prova' %}" class="btn-nav">Gerar Nova Prova</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="btn-nav btn-danger">Sair</a>
+            </nav>
+        </header>
+
+        <main>
+            {% if provas %}
+                <div class="lista">
+                    <h2>Provas Cadastradas</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Professor</th>
+                                <th>Disciplina</th>
+                                <th>Data de Criação</th>
+                                <th>Número de Questões</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prova in provas %}
+                            <tr>
+                                <td>{{ prova.id }}</td>
+                                <td>{{ prova.professor.nome }}</td>
+                                <td>{{ prova.disciplina }}</td>
+                                <td>{{ prova.data_criacao|date:"d/m/Y H:i" }}</td>
+                                <td>{{ prova.quantidade_questoes }}</td>
+                                <td style="white-space: nowrap; display: flex; align-items: center; gap: 8px;">
+                                    <a href="{% url 'visualizar_gabarito' prova.id %}" class="btn-small">Ver Gabarito</a>
+                                    <button onclick="abrirModalExcluir('{{ prova.id }}')" class="btn-trash" title="Excluir prova">🗑️</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="mensagem">
+                    <p>Nenhuma prova encontrada{% if disciplina_filtro %} para a disciplina {{ disciplina_filtro }}{% endif %}.</p>
+                    {% if disciplina_filtro %}
+                        <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina_filtro }}" class="btn">Gerar Primeira Prova para {{ disciplina_filtro }}</a>
+                    {% else %}
+                        <a href="{% url 'gerar_prova' %}" class="btn">Gerar Primeira Prova</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="modal-excluir" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center; margin: 20px;">
+            <h3 style="color: #dc3545; margin-top: 0;">Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir esta prova?</p>
+            <p style="color: #dc3545; font-weight: bold;">⚠️ Esta ação não pode ser desfeita!</p>
+            <p style="font-size: 0.9em; color: #666;">Isso também excluirá o gabarito e todas as notas relacionadas a esta prova.</p>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="confirmarExclusao()" style="background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px; cursor: pointer;">Sim, Excluir</button>
+                <button onclick="fecharModal()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso -->
+    <div id="modal-sucesso" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center; margin: 20px;">
+            <h3 style="color: #28a745; margin-top: 0;">✅ Sucesso!</h3>
+            <p id="mensagem-sucesso">Prova excluída com sucesso!</p>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="fecharModalSucesso()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Erro -->
+    <div id="modal-erro" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center; margin: 20px;">
+            <h3 style="color: #dc3545; margin-top: 0;">❌ Erro!</h3>
+            <p id="mensagem-erro">Erro ao excluir prova.</p>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="fecharModalErro()" style="background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">OK</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+console.log('Script carregado com sucesso');
+
+let provaParaExcluir = null;
+
+function abrirModalExcluir(provaId) {
+    console.log('Abrindo modal para excluir prova:', provaId);
+    console.log('Tipo do provaId:', typeof provaId);
+    console.log('provaId === null?', provaId === null);
+    console.log('provaId === "null"?', provaId === "null");
+    
+    provaParaExcluir = provaId;
+    console.log('provaParaExcluir definida como:', provaParaExcluir);
+    
+    const modal = document.getElementById('modal-excluir');
+    console.log('Modal encontrado:', modal);
+    modal.style.display = 'flex';
+}
+
+function fecharModal() {
+    console.log('Fechando modal de confirmação');
+    console.log('provaParaExcluir antes de fechar:', provaParaExcluir);
+    const modal = document.getElementById('modal-excluir');
+    modal.style.display = 'none';
+    // NÃO resetar provaParaExcluir aqui! Só depois da requisição
+    // provaParaExcluir = null;
+}
+
+function fecharModalSucesso() {
+    const modal = document.getElementById('modal-sucesso');
+    modal.style.display = 'none';
+    provaParaExcluir = null; // Só agora resetamos a variável
+    location.reload(); // Recarrega a página apenas após confirmar o sucesso
+}
+
+function fecharModalErro() {
+    const modal = document.getElementById('modal-erro');
+    modal.style.display = 'none';
+    provaParaExcluir = null; // Resetar também em caso de erro
+}
+
+function mostrarSucesso(mensagem) {
+    document.getElementById('mensagem-sucesso').textContent = mensagem;
+    document.getElementById('modal-sucesso').style.display = 'flex';
+}
+
+function mostrarErro(mensagem) {
+    document.getElementById('mensagem-erro').textContent = mensagem;
+    document.getElementById('modal-erro').style.display = 'flex';
+}
+
+function confirmarExclusao() {
+    if (provaParaExcluir) {
+        console.log('=== INICIANDO EXCLUSÃO ===');
+        console.log('Prova para excluir:', provaParaExcluir);
+        console.log('Tipo da prova:', typeof provaParaExcluir);
+        
+        fecharModal(); // Fecha o modal de confirmação primeiro
+        
+        const url = `/cadastro/prova/excluir/${provaParaExcluir}/`;
+        console.log('URL completa da requisição:', url);
+        console.log('Método: DELETE');
+        
+        // Mostrar loading
+        console.log('Fazendo requisição fetch...');
+        
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => {
+            console.log('=== RESPOSTA RECEBIDA ===');
+            console.log('Status:', response.status);
+            console.log('Status Text:', response.statusText);
+            console.log('Headers:', response.headers);
+            console.log('Response OK:', response.ok);
+            
+            // Log da resposta completa
+            return response.text().then(text => {
+                console.log('Response text completo:', text);
+                
+                // Tentar fazer parse como JSON
+                try {
+                    const data = JSON.parse(text);
+                    console.log('JSON parseado:', data);
+                    
+                    if (response.ok && data.success) {
+                        console.log('SUCESSO na exclusão!');
+                        mostrarSucesso('Prova excluída com sucesso!');
+                    } else {
+                        console.log('ERRO na exclusão:', data.error);
+                        mostrarErro(data.error || 'Erro ao excluir prova.');
+                    }
+                } catch (e) {
+                    console.log('Erro ao fazer parse JSON:', e);
+                    console.log('Response não é JSON válido');
+                    
+                    if (response.ok) {
+                        mostrarSucesso('Prova excluída com sucesso!');
+                    } else {
+                        mostrarErro('Erro ao excluir prova - resposta inválida.');
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.log('=== ERRO DE REDE ===');
+            console.error('Erro completo:', error);
+            console.error('Tipo do erro:', typeof error);
+            console.error('Stack trace:', error.stack);
+            mostrarErro('Erro de conexão. Tente novamente.');
+        });
+    } else {
+        console.log('ERRO: Nenhuma prova selecionada para exclusão');
+        console.log('provaParaExcluir atual:', provaParaExcluir);
+        mostrarErro('Nenhuma prova selecionada para exclusão.');
+    }
+}
+
+function getCookie(name) {
+    // Tenta pegar o token da meta tag primeiro
+    if (name === 'csrftoken') {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            const tokenValue = metaTag.getAttribute('content');
+            console.log('CSRF Token (meta tag):', tokenValue);
+            return tokenValue;
+        }
+    }
+    
+    // Fallback para cookies
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    console.log('CSRF Token (cookie):', cookieValue);
+    return cookieValue;
+}
+
+// Fechar modal ao clicar fora dele
+window.onclick = function(event) {
+    const modal = document.getElementById('modal-excluir');
+    if (event.target === modal) {
+        fecharModal();
+    }
+}
+</script>

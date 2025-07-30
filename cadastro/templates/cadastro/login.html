@@ -3,7 +3,7 @@
 <head>
     <title>Login - Sistema de Notas</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=9">
 </head>
 <body>
     <div class="container">
@@ -17,8 +17,8 @@
             <input type="password" name="senha" placeholder="Senha" required>
             <button type="submit" class="btn">Entrar</button>
         </form>
-        <a href="{% url 'cadastro_usuario' %}" class="link">Não tem cadastro? Cadastre-se</a>
-        <a href="{% url 'home' %}" class="link">Voltar à Home</a>
+        <a href="{% url 'cadastro_usuario' %}">Não tem cadastro? Cadastre-se</a>
+        <a href="{% url 'home' %}">Voltar à Home</a>
     </div>
 </body>
 </html>

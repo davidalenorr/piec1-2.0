@@ -3,9 +3,9 @@
 <head>
     <title>Detalhe da Disciplina</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
     <style>
-        #modal-va-bg {
+        #modal-va-bg, #modal-omr-bg {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             width: 100vw;
@@ -15,17 +15,44 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+        }
+        #modal-va-bg.active, #modal-omr-bg.active {
             display: flex;
         }
-        #modal-va {
+        #modal-va, #modal-omr {
             background: #fff;
             padding: 32px 24px 24px 24px;
             border-radius: 8px;
             min-width: 320px;
+            max-width: 500px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.18);
             max-width: 90vw;
             text-align: center;
             color: #222;
+        }
+        #modal-omr {
+            min-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .btn-file-upload {
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .btn-file-upload:hover {
+            background: #5a6268;
+        }
+        #btn-escanear:hover {
+            background: #218838;
+        }
+        #btn-aplicar:hover {
+            background: #0056b3;
         }
     </style>
 </head>
@@ -36,10 +63,13 @@
             
             <!-- Botões de ação da disciplina -->
             <div style="margin-bottom: 30px; text-align: center;">
-                <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina.nome }}" class="btn" style="background: linear-gradient(90deg, #00c853 60%, #00791b 100%); margin-bottom: 10px;">🎯 Gerar Prova desta Disciplina</a>
+                <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina.nome }}" class="btn" style="background: linear-gradient(90deg, #00c853 60%, #00791b 100%); margin-bottom: 10px; width: 100%;">🎯 Gerar Prova desta Disciplina</a>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
+                    <a href="{% url 'cadastrar_questao' %}?disciplina={{ disciplina.nome }}" class="btn" style="width: 100%;">📝 Cadastrar Questão</a>
+                    <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina.nome }}" class="btn" style="width: 100%;">👁️ Ver Questões</a>
+                </div>
                 <div style="display: flex; gap: 10px; justify-content: center;">
-                    <a href="{% url 'cadastrar_questao' %}?disciplina={{ disciplina.nome }}" class="btn">📝 Cadastrar Questão</a>
-                    <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina.nome }}" class="btn">👁️ Ver Questões</a>
+                    <a href="{% url 'listar_provas_disciplina' disciplina.nome %}" class="btn" style="width: 100%;">📋 Ver Provas e Gabaritos</a>
                 </div>
             </div>
             
@@ -127,20 +157,260 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal OMR -->
+    <div id="modal-omr-bg" style="display:none;">
+        <div id="modal-omr">
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="close-modal" onclick="fecharModalOMR()" style="color:#d32f2f; font-size:2em; background:none; border:none; cursor:pointer; margin-bottom:10px;">×</button>
+            </div>
+            <h3 id="modal-omr-title">Escaneamento OMR</h3>
+            <div id="modal-omr-info"></div>
+            
+            <!-- Seleção de Prova -->
+            <div style="margin-top:20px;">
+                <label><strong>Selecionar Prova:</strong></label>
+                <select id="prova-select" style="width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ddd;">
+                    <option value="">Carregando provas...</option>
+                </select>
+            </div>
+            
+            <!-- Upload de Foto -->
+            <div style="margin-top:20px;">
+                <label><strong>Upload da Folha de Resposta:</strong></label>
+                <input type="file" id="foto-upload" accept="image/*" style="width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ddd;">
+                <div id="preview-container" style="margin-top:10px; text-align:center; display:none;">
+                    <img id="foto-preview" style="max-width:100%; max-height:200px; border-radius:5px; border:1px solid #ddd;">
+                </div>
+            </div>
+            
+            <!-- Resultado do Escaneamento -->
+            <div id="resultado-omr" style="margin-top:20px; display:none;">
+                <div style="background:#f8f9fa; padding:15px; border-radius:5px; border-left:4px solid #007cba;">
+                    <h4 style="margin:0 0 10px 0; color:#007cba;">Resultado do Escaneamento</h4>
+                    <p><strong>Respostas Detectadas:</strong> <span id="respostas-detectadas"></span></p>
+                    <p><strong>Nota Calculada:</strong> <span id="nota-calculada" style="font-size:1.2em; color:#28a745; font-weight:bold;"></span></p>
+                </div>
+            </div>
+            
+            <!-- Botões de Ação -->
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                <button id="btn-escanear" onclick="executarOMR()" style="background:#28a745; color:white; padding:12px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+                    📷 Escanear Gabarito
+                </button>
+                <button id="btn-aplicar" onclick="aplicarNota()" style="background:#007cba; color:white; padding:12px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; display:none;">
+                    ✅ Aplicar Nota
+                </button>
+            </div>
+        </div>
+    </div>
     <script>
     let matriculaAtual = '';
     let nomeAtual = '';
+    let avaliacaoAtual = '';
+    let provaAtual = null;
+    let notaCalculada = 0;
+    
     function abrirModalVA(matricula, nome) {
         matriculaAtual = matricula;
         nomeAtual = nome;
         document.getElementById('modal-va-info').innerHTML = `<b>${nome}</b> (${matricula})<br>Selecione a avaliação:`;
         document.getElementById('modal-va-bg').style.display = 'flex';
     }
+    
     function fecharModalVA() {
         document.getElementById('modal-va-bg').style.display = 'none';
     }
+    
     function selecionarVA(avaliacao) {
+        avaliacaoAtual = avaliacao;
         fecharModalVA();
+        abrirModalOMR();
+    }
+    
+    function abrirModalOMR() {
+        document.getElementById('modal-omr-info').innerHTML = 
+            `<div style="background:#e3f2fd; padding:15px; border-radius:5px; margin-bottom:15px;">
+                <p><strong>Aluno:</strong> ${nomeAtual} (${matriculaAtual})</p>
+                <p><strong>Avaliação:</strong> ${avaliacaoAtual}</p>
+            </div>`;
+        
+        // Carregar provas disponíveis
+        carregarProvas();
+        
+        // Resetar interface
+        resetarInterfaceOMR();
+        
+        document.getElementById('modal-omr-bg').style.display = 'flex';
+    }
+    
+    function fecharModalOMR() {
+        document.getElementById('modal-omr-bg').style.display = 'none';
+        resetarInterfaceOMR();
+    }
+    
+    function resetarInterfaceOMR() {
+        document.getElementById('foto-upload').value = '';
+        document.getElementById('preview-container').style.display = 'none';
+        document.getElementById('resultado-omr').style.display = 'none';
+        document.getElementById('btn-aplicar').style.display = 'none';
+        document.getElementById('btn-escanear').textContent = '📷 Escanear Gabarito';
+        provaAtual = null;
+        notaCalculada = 0;
+    }
+    
+    async function carregarProvas() {
+        try {
+            // Fazer requisição para buscar provas da disciplina atual
+            const disciplina = '{{ disciplina.nome }}';
+            const response = await fetch(`/cadastro/api/provas/${disciplina}/`);
+            const provas = await response.json();
+            
+            const select = document.getElementById('prova-select');
+            select.innerHTML = '<option value="">Selecione uma prova...</option>';
+            
+            provas.forEach(prova => {
+                const option = document.createElement('option');
+                option.value = prova.id;
+                option.textContent = `Prova ${prova.id} - ${prova.data_criacao} (${prova.quantidade_questoes} questões)`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar provas:', error);
+            document.getElementById('prova-select').innerHTML = '<option value="">Erro ao carregar provas</option>';
+        }
+    }
+    
+    // Preview da imagem ao fazer upload
+    document.addEventListener('DOMContentLoaded', function() {
+        const fotoUpload = document.getElementById('foto-upload');
+        if (fotoUpload) {
+            fotoUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('foto-preview').src = e.target.result;
+                        document.getElementById('preview-container').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+    
+    async function executarOMR() {
+        const provaId = document.getElementById('prova-select').value;
+        const foto = document.getElementById('foto-upload').files[0];
+        
+        if (!provaId) {
+            alert('Por favor, selecione uma prova.');
+            return;
+        }
+        
+        if (!foto) {
+            alert('Por favor, faça upload da folha de resposta.');
+            return;
+        }
+        
+        // Atualizar botão para mostrar carregamento
+        const btnEscanear = document.getElementById('btn-escanear');
+        btnEscanear.textContent = '⏳ Escaneando...';
+        btnEscanear.disabled = true;
+        
+        try {
+            // Criar FormData para enviar arquivo
+            const formData = new FormData();
+            formData.append('prova_id', provaId);
+            formData.append('aluno_matricula', matriculaAtual);
+            formData.append('avaliacao', avaliacaoAtual);
+            formData.append('foto_gabarito', foto);
+            
+            // Fazer requisição para processar OMR
+            const response = await fetch('/cadastro/processar_omr/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const resultado = await response.json();
+            
+            if (resultado.success) {
+                // Mostrar resultado
+                document.getElementById('respostas-detectadas').textContent = resultado.respostas_detectadas.join(', ');
+                document.getElementById('nota-calculada').textContent = resultado.nota + '/10';
+                document.getElementById('resultado-omr').style.display = 'block';
+                document.getElementById('btn-aplicar').style.display = 'inline-block';
+                
+                provaAtual = provaId;
+                notaCalculada = resultado.nota;
+                
+                btnEscanear.textContent = '✅ Escaneamento Concluído';
+            } else {
+                alert('Erro no escaneamento: ' + resultado.error);
+                btnEscanear.textContent = '📷 Escanear Gabarito';
+            }
+        } catch (error) {
+            console.error('Erro no processamento OMR:', error);
+            alert('Erro ao processar escaneamento. Tente novamente.');
+            btnEscanear.textContent = '📷 Escanear Gabarito';
+        } finally {
+            btnEscanear.disabled = false;
+        }
+    }
+    
+    async function aplicarNota() {
+        if (!provaAtual || notaCalculada === 0) {
+            alert('Nenhuma nota para aplicar.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/cadastro/aplicar_nota_omr/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    matricula: matriculaAtual,
+                    avaliacao: avaliacaoAtual,
+                    nota: notaCalculada
+                })
+            });
+            
+            const resultado = await response.json();
+            
+            if (resultado.success) {
+                alert(`Nota ${notaCalculada}/10 aplicada com sucesso para ${nomeAtual} na avaliação ${avaliacaoAtual}!`);
+                fecharModalOMR();
+                // Recarregar a página para mostrar a nota atualizada
+                location.reload();
+            } else {
+                alert('Erro ao aplicar nota: ' + resultado.error);
+            }
+        } catch (error) {
+            console.error('Erro ao aplicar nota:', error);
+            alert('Erro ao aplicar nota. Tente novamente.');
+        }
+    }
+    
+    // Função para obter CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
     </script>
 </body>

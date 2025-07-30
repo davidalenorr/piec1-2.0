@@ -3,7 +3,7 @@
 <head>
     <title>Cadastrar Disciplina</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
 </head>
 <body>
     <div class="container">
@@ -18,8 +18,13 @@
 
             <label for="id_ano">Ano/Período</label>
             <select name="ano" id="id_ano" required>
-                <option value="">Selecione...</option>
-                <option value="2025.2">2025.2</option>
+                <option value="">Selecione o ano e período...</option>
+                <option value="2024.1">2024.1</option>
+                <option value="2024.2">2024.2</option>
+                <option value="2025.1">2025.1</option>
+                <option value="2025.2" selected>2025.2</option>
+                <option value="2026.1">2026.1</option>
+                <option value="2026.2">2026.2</option>
             </select>
 
             <button type="submit" class="btn">Cadastrar</button>

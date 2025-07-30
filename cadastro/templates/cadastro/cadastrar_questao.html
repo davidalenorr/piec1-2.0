@@ -3,7 +3,7 @@
 <head>
     <title>Cadastrar Questão</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=9">
     <style>
         .questao-form {
             background: rgba(255, 255, 255, 0.05);
@@ -101,7 +101,7 @@
             <div class="form-group">
                 <label for="disciplina">📚 Disciplina:</label>
                 <select name="disciplina" id="disciplina" required>
-                    <option value="">Selecione uma disciplina</option>
+                    <option value="">Selecione a disciplina...</option>
                     {% for disc in disciplinas %}
                         <option value="{{ disc }}" {% if disc == disciplina_selecionada %}selected{% endif %}>{{ disc }}</option>
                     {% endfor %}
@@ -157,8 +157,12 @@
         </form>
         
         <div style="margin-top: 20px; text-align: center;">
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                {% if disciplina_selecionada %}
+                    <a href="{% url 'detalhe_disciplina_por_nome' disciplina_selecionada %}" class="back-link">🔙 Voltar à Disciplina</a>
+                {% else %}
+                    <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+                {% endif %}
                 <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">👁️ Ver Questões Cadastradas</a>
             </div>
         </div>

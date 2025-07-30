@@ -3,13 +3,13 @@
 <head>
     <title>Painel do Professor</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=12">
 </head>
 <body>
     <div class="container">
-        <div style="text-align:right;">
-            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
-        </div>
+        <!-- Botão de Logout com ícone de porta -->
+        <a href="{% url 'logout' %}" class="logout-icon" title="Sair do sistema">🚪</a>
+        
         {% with nome=request.session.nome_completo %}
             {% if nome %}
                 {% with nomes=nome.split %}
@@ -17,17 +17,16 @@
                 {% endwith %}
             {% endif %}
         {% endwith %}
-        <div>
-            <a href="{% url 'cadastrar_disciplina' %}" class="btn" style="width:100%;margin-bottom:10px;">Cadastrar Disciplina</a>
-            <div style="display:flex; gap:10px; justify-content:center; margin-bottom:10px;">
-                <a href="{% url 'cadastrar_aluno' %}" class="btn" style="width:100%;">Cadastrar Aluno</a>
-                <a href="{% url 'lista_alunos' %}" class="btn" style="width:100%;">Ver alunos cadastrados</a>
-            </div>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <a href="{% url 'cadastrar_questao' %}" class="btn" style="width:100%;">Cadastrar Questões</a>
-                <a href="{% url 'lista_questoes' %}" class="btn" style="width:100%;">Ver questões cadastradas</a>
-            </div>
+        
+        <!-- Grid de botões principais -->
+        <div class="painel-grid">
+            <a href="{% url 'cadastrar_disciplina' %}" class="btn btn-painel btn-disciplina">📚 Cadastrar Disciplina</a>
+            <a href="{% url 'cadastrar_aluno' %}" class="btn btn-painel btn-aluno">👨‍🎓 Cadastrar Aluno</a>
+            <a href="{% url 'lista_alunos' %}" class="btn btn-painel btn-aluno">📋 Ver alunos cadastrados</a>
+            <a href="{% url 'cadastrar_questao' %}" class="btn btn-painel btn-questao">❓ Cadastrar Questões</a>
+            <a href="{% url 'lista_questoes' %}" class="btn btn-painel btn-questao">📝 Ver questões cadastradas</a>
         </div>
+        
         <h2>Disciplinas Cadastradas</h2>
         {% if disciplinas %}
             <table class="table">
@@ -41,7 +40,7 @@
                     <td>{{ d.nome }}</td>
                     <td>{{ d.ano }}</td>
                     <td>
-                        <a href="{% url 'detalhe_disciplina' forloop.counter0 %}" class="btn-small">Ir para disciplina</a>
+                        <a href="{% url 'detalhe_disciplina' forloop.counter0 %}" class="btn-small">🎯 Ir para disciplina</a>
                     </td>
                 </tr>
                 {% endfor %}

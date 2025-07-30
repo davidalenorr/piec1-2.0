@@ -3,7 +3,7 @@
 <head>
     <title>Prova Gerada</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=6">
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -393,13 +393,13 @@
 <body>
     <div class="container">
         <div class="no-print" style="text-align:right;">
-            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+            <a href="{% url 'logout' %}" class="btn-nav btn-danger" style="display: inline-block; margin-bottom: 10px;">Logout</a>
         </div>
         
         <div class="cabecalho-prova">
             <h2>PROVA - {{ disciplina }}</h2>
             <div class="info-prova">
-                <span><strong>Professor:</strong> {{ request.session.nome_completo }}</span>
+                <span><strong>Professor:</strong> {{ professor_nome|default:request.session.nome_completo|default:"David Alenor Dias Gomes da Silva" }}</span>
                 <span><strong>Data:</strong> ___/___/______</span>
             </div>
             <div class="info-prova">
@@ -494,11 +494,16 @@
         
         <div class="no-print" style="margin-top: 30px; text-align: center;">
             <div style="margin-bottom: 15px;">
-                <button onclick="window.print()" class="btn">🖨️ Imprimir Prova</button>
+                <button onclick="window.print()" class="btn-nav">🖨️ Imprimir Prova</button>
             </div>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <a href="{% url 'gerar_prova' %}" class="btn">🔄 Gerar Nova Prova</a>
-                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                {% if modo_pdf %}
+                    <a href="{% url 'visualizar_gabarito' prova_id %}" class="btn-nav">📋 Ver Gabarito</a>
+                    <a href="{% url 'listar_provas_disciplina' disciplina %}" class="btn-nav">📝 Voltar às Provas</a>
+                {% endif %}
+                <a href="{% url 'gerar_prova' %}" class="btn-nav">🔄 Gerar Nova Prova</a>
+                <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+                <a href="{% url 'logout' %}" class="btn-nav btn-danger">Sair</a>
             </div>
         </div>
         

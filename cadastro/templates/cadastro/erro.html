@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro - Sistema de Cadastro</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ops! Algo deu errado</h1>
+            <nav>
+                <a href="{% url 'index' %}">Início</a>
+                <a href="javascript:history.back()">Voltar</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="erro-container">
+                <div class="erro-icon">⚠️</div>
+                <h2>{{ titulo|default:"Erro encontrado" }}</h2>
+                <p class="erro-mensagem">{{ mensagem|default:"Ocorreu um erro inesperado. Tente novamente." }}</p>
+                
+                <div class="erro-acoes">
+                    <a href="{% url 'index' %}" class="btn">Ir para o Início</a>
+                    <a href="javascript:history.back()" class="btn btn-secondary">Voltar</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .erro-container {
+            text-align: center;
+            padding: 50px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .erro-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .erro-container h2 {
+            color: #d73527;
+            margin-bottom: 20px;
+        }
+        
+        .erro-mensagem {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .erro-acoes {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</body>
+</html>

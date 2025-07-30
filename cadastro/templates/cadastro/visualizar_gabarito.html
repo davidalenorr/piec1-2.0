@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabarito da Prova - Sistema de Cadastro</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'cadastro/style.css' %}?v=6">
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gabarito da Prova</h1>
+            <nav style="display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap;">
+                <a href="{% url 'gerar_pdf_prova' prova.id %}" class="btn-nav">📄 Gerar PDF da Prova</a>
+                <a href="{% url 'listar_provas_disciplina' prova.disciplina %}" class="btn-nav">Voltar às Provas</a>
+                <a href="{% url 'detalhe_disciplina_por_nome' prova.disciplina %}" class="btn-nav">Voltar à Disciplina</a>
+                <a href="{% url 'logout' %}" class="btn-nav btn-danger">Sair</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="info-prova">
+                <h2>Informações da Prova</h2>
+                <p><strong>Professor:</strong> {{ prova.professor.nome }}</p>
+                <p><strong>Disciplina:</strong> {{ prova.disciplina }}</p>
+                <p><strong>Data de Criação:</strong> {{ prova.data_criacao|date:"d/m/Y H:i" }}</p>
+                <p><strong>Total de Questões:</strong> {{ questoes|length }}</p>
+                {% if debug_info %}
+                    <p style="font-size: 0.9em; color: #666;"><strong>Debug:</strong> IDs: {{ debug_info.questoes_ids }}, Encontradas: {{ debug_info.questoes_encontradas }}, Total no sistema: {{ debug_info.total_questoes_sistema }}</p>
+                {% endif %}
+            </div>
+
+            <div class="gabarito">
+                <h2>Respostas Corretas</h2>
+                <div class="respostas-grid">
+                    {% for questao in questoes %}
+                        <div class="resposta-item">
+                            <span class="numero-questao">{{ forloop.counter }}</span>
+                            <span class="alternativa">{{ questao.resposta_correta }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="questoes-detalhes">
+                <h2>Questões da Prova</h2>
+                {% if questoes %}
+                    {% for questao in questoes %}
+                        <div class="questao-card">
+                            <h3>Questão {{ forloop.counter }}</h3>
+                            <p class="enunciado">{{ questao.enunciado|default:"Enunciado não encontrado" }}</p>
+                            <div class="alternativas">
+                                <p><strong>a)</strong> {{ questao.alternativa_a|default:"Alternativa A não encontrada" }}</p>
+                                <p><strong>b)</strong> {{ questao.alternativa_b|default:"Alternativa B não encontrada" }}</p>
+                                <p><strong>c)</strong> {{ questao.alternativa_c|default:"Alternativa C não encontrada" }}</p>
+                                <p><strong>d)</strong> {{ questao.alternativa_d|default:"Alternativa D não encontrada" }}</p>
+                                {% if questao.alternativa_e %}
+                                    <p><strong>e)</strong> {{ questao.alternativa_e }}</p>
+                                {% endif %}
+                            </div>
+                            <p class="resposta-correta"><strong>Resposta Correta:</strong> {{ questao.resposta_correta|default:"Não encontrada" }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="questao-card">
+                        <h3>Nenhuma questão encontrada</h3>
+                        <p class="enunciado">Erro: As questões desta prova não foram encontradas no sistema.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .respostas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .resposta-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid #007cba;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .numero-questao {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .alternativa {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007cba;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 50%;
+            display: inline-block;
+            min-width: 30px;
+        }
+        
+        .questao-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border-left: 6px solid #007cba;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        
+        .questao-card h3 {
+            margin-top: 0;
+            color: #007cba;
+            font-size: 1.3em;
+            border-bottom: 2px solid #e3f2fd;
+            padding-bottom: 10px;
+        }
+        
+        .enunciado {
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+            font-size: 1.1em;
+            line-height: 1.6;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007cba;
+        }
+        
+        .alternativas p {
+            margin: 12px 0;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            color: #2c3e50;
+            font-weight: 500;
+            border-left: 3px solid #dee2e6;
+        }
+        
+        .resposta-correta {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #155724;
+            font-weight: bold;
+            border: 2px solid #c3e6cb;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .info-prova {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            color: #1565c0;
+            border: 2px solid #90caf9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .info-prova h2 {
+            color: #0d47a1;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        
+        .info-prova p {
+            margin: 10px 0;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .info-prova strong {
+            color: #0d47a1;
+        }
+    </style>
+</body>
+</html>

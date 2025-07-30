@@ -3,7 +3,7 @@
 <head>
     <title>Alunos Cadastrados</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
 </head>
 <body>
     <div class="container">
@@ -13,11 +13,15 @@
                 <tr>
                     <th>Matrícula</th>
                     <th>Nome</th>
+                    <th>Ações</th>
                 </tr>
                 {% for aluno in alunos %}
                 <tr>
                     <td>{{ aluno.matricula }}</td>
                     <td>{{ aluno.nome }}</td>
+                    <td>
+                        <button class="btn-small btn-success" onclick="alert('Função não implementada')">📝</button>
+                    </td>
                 </tr>
                 {% endfor %}
             </table>

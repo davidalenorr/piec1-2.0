@@ -3,7 +3,7 @@
 <head>
     <title>Gerar Prova</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+        <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
 </head>
 <body>
     <div class="container">
@@ -78,7 +78,11 @@
         
         <div style="margin-top: 20px; text-align: center;">
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+                {% if disciplina_selecionada %}
+                    <a href="{% url 'detalhe_disciplina_por_nome' disciplina_selecionada %}" class="back-link">🔙 Voltar à Disciplina</a>
+                {% else %}
+                    <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+                {% endif %}
                 {% if total_questoes > 0 %}
                     <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">👁️ Ver Questões Cadastradas</a>
                 {% endif %}
