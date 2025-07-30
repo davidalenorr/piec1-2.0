@@ -1,28 +1,58 @@
-/* ===== VERSÃO 12 - GRID CORRIGIDO E LOGOUT MENOR ===== */
+/* ===== VERSÃO 16 - SEM SCROLL GLOBAL, SCROLL INTERNO NO PAINEL ===== */
+
+/* Configuração global - sem scroll na página */
+html {
+    height: 100%;
+    overflow: hidden;
+}
 
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: linear-gradient(135deg, #2980b9 0%, #6dd5fa 100%);
     color: #fff;
-    min-height: 100vh;
+    height: 100vh;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 .container {
     max-width: 800px;
-    margin: 60px auto;
+    margin: 20px auto;
     background: rgba(0, 51, 102, 0.92);
     border-radius: 18px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    padding: 40px 30px;
+    padding: 20px 30px;
     text-align: center;
     position: relative;
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Scroll personalizado para o container */
+.container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: rgba(109, 213, 250, 0.6);
+    border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: rgba(109, 213, 250, 0.8);
 }
 
 h1, h2, h3 {
-    margin-bottom: 30px;
-    letter-spacing: 2px;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
 }
 
 /* ===== BOTÕES PRINCIPAIS ===== */
@@ -198,36 +228,44 @@ a:hover, .link:hover {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
     grid-template-rows: auto auto auto !important;
-    gap: 10px !important;
-    margin: 25px 0 !important;
+    gap: 8px !important;
+    margin: 15px 0 !important;
     align-items: stretch !important;
-    padding-top: 15px !important;
+    padding-top: 10px !important;
     width: 100% !important;
 }
 
+.painel-grid .btn-painel {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 .painel-grid .btn-disciplina {
-    grid-column: 1 / 3 !important;
+    grid-column: 1 / -1 !important;
     grid-row: 1 !important;
     background: linear-gradient(135deg, #6f42c1, #5a2d91) !important;
     margin-bottom: 5px !important;
+    width: 100% !important;
 }
 
-.painel-grid .btn-aluno:first-of-type {
+.painel-grid .btn-aluno:nth-of-type(2) {
     grid-column: 1 !important;
     grid-row: 2 !important;
 }
 
-.painel-grid .btn-aluno:last-of-type {
+.painel-grid .btn-aluno:nth-of-type(3) {
     grid-column: 2 !important;
     grid-row: 2 !important;
 }
 
-.painel-grid .btn-questao:first-of-type {
+.painel-grid .btn-questao:nth-of-type(4) {
     grid-column: 1 !important;
     grid-row: 3 !important;
 }
 
-.painel-grid .btn-questao:last-of-type {
+.painel-grid .btn-questao:nth-of-type(5) {
     grid-column: 2 !important;
     grid-row: 3 !important;
 }
@@ -238,11 +276,11 @@ a:hover, .link:hover {
 
 /* ===== MELHORIAS PARA BOTÕES DO PAINEL ===== */
 .btn-painel {
-    display: block !important;
+    display: flex !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 14px 16px !important;
-    font-size: 15px !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     border-radius: 10px !important;
     text-decoration: none !important;
@@ -252,10 +290,17 @@ a:hover, .link:hover {
     transition: all 0.3s ease !important;
     box-shadow: 0 3px 12px rgba(0,0,0,0.12) !important;
     color: #fff !important;
-    min-height: 50px !important;
-    display: flex !important;
+    min-height: 45px !important;
+    height: 45px !important;
     align-items: center !important;
     justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Garantir que o botão disciplina ocupe toda a largura */
+.btn-disciplina {
+    width: 100% !important;
+    max-width: none !important;
 }
 
 .btn-aluno {
@@ -437,7 +482,7 @@ label {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
+    margin: 10px 0;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
@@ -445,7 +490,7 @@ table {
 }
 
 th, td {
-    padding: 15px 12px;
+    padding: 10px 8px;
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -454,7 +499,7 @@ th {
     background: rgba(255, 255, 255, 0.15);
     font-weight: bold;
     color: #6dd5fa;
-    font-size: 16px;
+    font-size: 14px;
     letter-spacing: 0.5px;
 }
 
@@ -561,22 +606,22 @@ tr:hover {
         grid-row: 1 !important;
     }
     
-    .painel-grid .btn-aluno:first-of-type {
+    .painel-grid .btn-aluno:nth-of-type(2) {
         grid-column: 1 !important;
         grid-row: 2 !important;
     }
     
-    .painel-grid .btn-aluno:last-of-type {
+    .painel-grid .btn-aluno:nth-of-type(3) {
         grid-column: 1 !important;
         grid-row: 3 !important;
     }
     
-    .painel-grid .btn-questao:first-of-type {
+    .painel-grid .btn-questao:nth-of-type(4) {
         grid-column: 1 !important;
         grid-row: 4 !important;
     }
     
-    .painel-grid .btn-questao:last-of-type {
+    .painel-grid .btn-questao:nth-of-type(5) {
         grid-column: 1 !important;
         grid-row: 5 !important;
     }
@@ -593,6 +638,7 @@ tr:hover {
         padding: 12px 14px !important;
         font-size: 14px !important;
         min-height: 45px !important;
+        height: 45px !important;
     }
     
     .btn-nav {
