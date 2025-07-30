@@ -274,6 +274,117 @@ a:hover, .link:hover {
     background: linear-gradient(135deg, #5a2d91, #6f42c1) !important;
 }
 
+/* ===== ACTION BUTTONS GRID LAYOUT - DISCIPLINA DETAIL ===== */
+.action-buttons-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    gap: 10px !important;
+    margin: 20px 0 30px 0 !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+.action-buttons-grid .btn {
+    height: 55px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12) !important;
+    color: #fff !important;
+    box-sizing: border-box !important;
+}
+
+.action-buttons-grid .btn:nth-child(1) {
+    grid-column: 1 / -1 !important;
+    background: linear-gradient(135deg, #00c853, #00791b) !important;
+}
+
+.action-buttons-grid .btn:nth-child(1):hover {
+    background: linear-gradient(135deg, #00791b, #00c853) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 18px rgba(0, 200, 83, 0.3) !important;
+}
+
+.action-buttons-grid .btn:nth-child(2) {
+    grid-column: 1 !important;
+    background: linear-gradient(135deg, #007cba, #0056b3) !important;
+}
+
+.action-buttons-grid .btn:nth-child(3) {
+    grid-column: 2 !important;
+    background: linear-gradient(135deg, #007cba, #0056b3) !important;
+}
+
+.action-buttons-grid .btn:nth-child(4) {
+    grid-column: 1 / -1 !important;
+    background: linear-gradient(135deg, #007cba, #0056b3) !important;
+}
+
+.action-buttons-grid .btn:nth-child(2):hover,
+.action-buttons-grid .btn:nth-child(3):hover,
+.action-buttons-grid .btn:nth-child(4):hover {
+    background: linear-gradient(135deg, #0056b3, #007cba) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 18px rgba(0, 124, 186, 0.3) !important;
+}
+
+/* ===== BOTTOM NAVIGATION GRID LAYOUT ===== */
+.bottom-nav-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin: 30px 0 20px 0 !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+.bottom-nav-grid .btn {
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12) !important;
+    color: #fff !important;
+    box-sizing: border-box !important;
+}
+
+.bottom-nav-grid .btn-primary {
+    background: linear-gradient(135deg, #007cba, #0056b3) !important;
+}
+
+.bottom-nav-grid .btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #007cba) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 18px rgba(0, 124, 186, 0.3) !important;
+}
+
+.bottom-nav-grid .btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+}
+
+.bottom-nav-grid .btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268, #6c757d) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 18px rgba(108, 117, 125, 0.3) !important;
+}
+
 /* ===== MELHORIAS PARA BOTÕES DO PAINEL ===== */
 .btn-painel {
     display: flex !important;
@@ -626,6 +737,34 @@ tr:hover {
         grid-row: 5 !important;
     }
     
+    /* Action buttons grid responsivo */
+    .action-buttons-grid {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto auto auto auto !important;
+    }
+    
+    .action-buttons-grid .btn:nth-child(1) {
+        grid-column: 1 !important;
+    }
+    
+    .action-buttons-grid .btn:nth-child(2) {
+        grid-column: 1 !important;
+    }
+    
+    .action-buttons-grid .btn:nth-child(3) {
+        grid-column: 1 !important;
+    }
+    
+    .action-buttons-grid .btn:nth-child(4) {
+        grid-column: 1 !important;
+    }
+    
+    /* Bottom navigation grid responsivo */
+    .bottom-nav-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    
     .logout-icon {
         top: 8px !important;
         right: 12px !important;
@@ -805,4 +944,28 @@ small {
     .questao-prova h3 {
         color: #333 !important;
     }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA MODAIS ===== */
+.modal select option {
+    background: #003366;
+    color: #fff;
+}
+
+.modal input[type="file"] {
+    color: #fff !important;
+}
+
+.modal input[type="file"]::-webkit-file-upload-button {
+    background: linear-gradient(135deg, #6dd5fa, #2196f3);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.modal input[type="file"]::-webkit-file-upload-button:hover {
+    background: linear-gradient(135deg, #2196f3, #1976d2);
 }

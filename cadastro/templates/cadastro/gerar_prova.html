@@ -3,7 +3,7 @@
 <head>
     <title>Gerar Prova</title>
     {% load static %}
-        <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
+        <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=16">
 </head>
 <body>
     <div class="container">
@@ -19,25 +19,20 @@
         {% if total_questoes > 0 %}
             <div style="text-align: center; margin-bottom: 30px;">
                 <p><strong>Você tem {{ total_questoes }} questão{{ total_questoes|pluralize:"es" }} cadastrada{{ total_questoes|pluralize:"s" }}{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %}.</strong></p>
-                <p>Escolha o modo de seleção das questões para a prova:</p>
+                <p>Configure a prova automática abaixo ou escolha manualmente as questões:</p>
             </div>
             
-            <!-- Botões de seleção de modo -->
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" onclick="selecionarModo('automatico')" id="btn-automatico" class="btn modo-btn ativo" style="width: auto; padding: 12px 20px;">
-                        🎲 Seleção Automática
-                    </button>
-                    <a href="{% url 'selecionar_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" 
-                       class="btn modo-btn" style="width: auto; padding: 12px 20px; text-decoration: none; display: inline-block;">
-                        ✋ Seleção Manual
-                    </a>
-                </div>
+            <!-- Botão de seleção manual centralizado -->
+            <div class="manual-selection-container">
+                <a href="{% url 'selecionar_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" 
+                   class="btn btn-manual-selection">
+                    ✋ Seleção Manual de Questões
+                </a>
             </div>
             
             <form method="post" id="form-prova">
                 {% csrf_token %}
-                <input type="hidden" name="modo_selecao" id="modo_selecao" value="automatico">
+                <input type="hidden" name="modo_selecao" value="automatico">
                 
                 {% if not disciplina_selecionada %}
                 <div class="form-group">
@@ -51,8 +46,8 @@
                 </div>
                 {% else %}
                 <input type="hidden" name="disciplina_filtro" value="{{ disciplina_selecionada }}">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <p style="color: #6dd5fa;"><strong>📚 Disciplina: {{ disciplina_selecionada }}</strong></p>
+                <div class="disciplina-info-container">
+                    <div class="disciplina-info">📚 Disciplina: {{ disciplina_selecionada }}</div>
                 </div>
                 {% endif %}
                 
@@ -68,7 +63,9 @@
                     </p>
                 </div>
                 
-                <button type="submit" class="btn" id="btn-submit">🎲 Gerar Prova Automática</button>
+                <div class="generate-button-container">
+                    <button type="submit" class="btn btn-generate" id="btn-submit">� Gerar Prova Automática</button>
+                </div>
             </form>
         {% else %}
             <div class="subtitle">Você precisa cadastrar questões{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %} antes de gerar uma prova.</div>
@@ -76,49 +73,116 @@
             <a href="{% url 'cadastrar_questao' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">Cadastrar Primeira Questão{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %}</a>
         {% endif %}
         
-        <div style="margin-top: 20px; text-align: center;">
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                {% if disciplina_selecionada %}
-                    <a href="{% url 'detalhe_disciplina_por_nome' disciplina_selecionada %}" class="back-link">🔙 Voltar à Disciplina</a>
-                {% else %}
-                    <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
-                {% endif %}
-                {% if total_questoes > 0 %}
-                    <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">👁️ Ver Questões Cadastradas</a>
-                {% endif %}
-            </div>
+        <div class="bottom-nav-grid">
+            {% if disciplina_selecionada %}
+                <a href="{% url 'detalhe_disciplina_por_nome' disciplina_selecionada %}" class="btn btn-secondary">� Voltar à Disciplina</a>
+            {% else %}
+                <a href="{% url 'index' %}" class="btn btn-secondary">🔙 Voltar ao Painel</a>
+            {% endif %}
+            {% if total_questoes > 0 %}
+                <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn btn-primary">👁️ Ver Questões Cadastradas</a>
+            {% endif %}
         </div>
     </div>
     
     <style>
-        .modo-btn {
-            background: rgba(255,255,255,0.1) !important;
-            border: 2px solid rgba(255,255,255,0.2) !important;
+        /* ===== CONTAINER DE SELEÇÃO MANUAL ===== */
+        .manual-selection-container {
+            text-align: center;
+            margin: 20px 0 30px 0;
+        }
+
+        .btn-manual-selection {
+            display: inline-block !important;
+            background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+            color: white !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            padding: 15px 30px !important;
+            border-radius: 10px !important;
+            text-decoration: none !important;
+            border: none !important;
+            cursor: pointer !important;
             transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3) !important;
+            min-width: 280px !important;
         }
-        
-        .modo-btn.ativo {
-            background: linear-gradient(135deg, #1976d2, #42a5f5) !important;
-            border-color: #1976d2 !important;
-            transform: scale(1.02) !important;
+
+        .btn-manual-selection:hover {
+            background: linear-gradient(135deg, #f57c00, #ff9800) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4) !important;
         }
-        
-        .modo-btn:hover {
-            background: rgba(255,255,255,0.2) !important;
-            border-color: rgba(255,255,255,0.4) !important;
+
+        /* ===== INFO DA DISCIPLINA ===== */
+        .disciplina-info-container {
+            text-align: center;
+            margin: 20px 0;
         }
-        
-        .modo-btn.ativo:hover {
-            background: linear-gradient(135deg, #005f99, #1976d2) !important;
+
+        .disciplina-info {
+            display: inline-block;
+            background: linear-gradient(135deg, #6f42c1, #5a2d91);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 3px 12px rgba(111, 66, 193, 0.3);
+        }
+
+        /* ===== BOTÃO GERAR PROVA ===== */
+        .generate-button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #00c853, #00791b) !important;
+            color: white !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            padding: 15px 30px !important;
+            border-radius: 10px !important;
+            border: none !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3) !important;
+            min-width: 250px !important;
+        }
+
+        .btn-generate:hover {
+            background: linear-gradient(135deg, #00791b, #00c853) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4) !important;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .btn-manual-selection {
+                min-width: 240px !important;
+                font-size: 15px !important;
+                padding: 12px 24px !important;
+            }
+            
+            .btn-generate {
+                min-width: 200px !important;
+                font-size: 15px !important;
+                padding: 12px 24px !important;
+            }
         }
     </style>
     
     <script>
-        function selecionarModo(modo) {
-            // Esta função agora só é usada para modo automático
-            // O modo manual usa link direto
-            console.log('Modo automático selecionado');
-        }
+        // JavaScript simplificado - só mantém funcionalidade essencial
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnSubmit = document.getElementById('btn-submit');
+            
+            // Garantir que o botão de gerar prova tenha o texto correto
+            if (btnSubmit) {
+                btnSubmit.textContent = '🎯 Gerar Prova Automática';
+            }
+        });
     </script>
 </body>
 </html>

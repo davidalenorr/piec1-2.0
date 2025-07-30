@@ -3,7 +3,7 @@
 <head>
     <title>Detalhe da Disciplina</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}?v=7">
+            <link rel="stylesheet" type="text/css" href="{% static 'cadastro/style.css' %}?v=17">
     <style>
         #modal-va-bg, #modal-omr-bg {
             position: fixed;
@@ -62,15 +62,19 @@
             <h2>{{ disciplina.nome }} - {{ disciplina.ano }}</h2>
             
             <!-- Botões de ação da disciplina -->
-            <div style="margin-bottom: 30px; text-align: center;">
-                <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina.nome }}" class="btn" style="background: linear-gradient(90deg, #00c853 60%, #00791b 100%); margin-bottom: 10px; width: 100%;">🎯 Gerar Prova desta Disciplina</a>
-                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
-                    <a href="{% url 'cadastrar_questao' %}?disciplina={{ disciplina.nome }}" class="btn" style="width: 100%;">📝 Cadastrar Questão</a>
-                    <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina.nome }}" class="btn" style="width: 100%;">👁️ Ver Questões</a>
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <a href="{% url 'listar_provas_disciplina' disciplina.nome %}" class="btn" style="width: 100%;">📋 Ver Provas e Gabaritos</a>
-                </div>
+            <div class="action-buttons-grid">
+                <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina.nome }}" class="btn btn-primary">
+                    🎯 Gerar Prova
+                </a>
+                <a href="{% url 'cadastrar_questao' %}?disciplina={{ disciplina.nome }}" class="btn btn-secondary">
+                    📝 Cadastrar Questão
+                </a>
+                <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina.nome }}" class="btn btn-secondary">
+                    👁️ Ver Questões
+                </a>
+                <a href="{% url 'listar_provas_disciplina' disciplina.nome %}" class="btn btn-secondary">
+                    📋 Ver Provas e Gabaritos
+                </a>
             </div>
             
             {% if sucesso %}
@@ -142,63 +146,63 @@
         <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
     </div>
 
-    <div id="modal-va-bg" style="display:none;">
-        <div id="modal-va">
+    <div id="modal-va-bg" class="modal" style="display:none;">
+        <div class="modal-content">
             <div style="display:flex; justify-content:flex-end;">
                 <button class="close-modal" onclick="fecharModalVA()" style="color:#d32f2f; font-size:2em; background:none; border:none; cursor:pointer; margin-bottom:10px;">×</button>
             </div>
-            <h3 id="modal-va-title">Selecionar Avaliação</h3>
-            <div id="modal-va-info">Selecione a avaliação:</div>
-            <div style="margin-top:18px;">
-                <button onclick="selecionarVA('1VA')">1VA</button>
-                <button onclick="selecionarVA('2VA')">2VA</button>
-                <button onclick="selecionarVA('3VA')">3VA</button>
-                <button onclick="selecionarVA('Final')">Final</button>
+            <h3 id="modal-va-title" style="color: #6dd5fa; margin-bottom: 15px;">Selecionar Avaliação</h3>
+            <div id="modal-va-info" style="color: #e0f7ff; margin-bottom: 20px;">Selecione a avaliação:</div>
+            <div style="margin-top:18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="selecionarVA('1VA')" class="btn-nav">1VA</button>
+                <button onclick="selecionarVA('2VA')" class="btn-nav">2VA</button>
+                <button onclick="selecionarVA('3VA')" class="btn-nav">3VA</button>
+                <button onclick="selecionarVA('Final')" class="btn-nav">Final</button>
             </div>
         </div>
     </div>
 
     <!-- Modal OMR -->
-    <div id="modal-omr-bg" style="display:none;">
-        <div id="modal-omr">
+    <div id="modal-omr-bg" class="modal" style="display:none;">
+        <div class="modal-content">
             <div style="display:flex; justify-content:flex-end;">
                 <button class="close-modal" onclick="fecharModalOMR()" style="color:#d32f2f; font-size:2em; background:none; border:none; cursor:pointer; margin-bottom:10px;">×</button>
             </div>
-            <h3 id="modal-omr-title">Escaneamento OMR</h3>
-            <div id="modal-omr-info"></div>
+            <h3 id="modal-omr-title" style="color: #6dd5fa; margin-bottom: 15px;">Escaneamento OMR</h3>
+            <div id="modal-omr-info" style="color: #e0f7ff; text-align: left;"></div>
             
             <!-- Seleção de Prova -->
             <div style="margin-top:20px;">
-                <label><strong>Selecionar Prova:</strong></label>
-                <select id="prova-select" style="width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ddd;">
+                <label style="color: #e0f7ff; font-weight: bold; display: block; margin-bottom: 10px;">Selecionar Prova:</label>
+                <select id="prova-select" class="form-field" style="width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff;">
                     <option value="">Carregando provas...</option>
                 </select>
             </div>
             
             <!-- Upload de Foto -->
             <div style="margin-top:20px;">
-                <label><strong>Upload da Folha de Resposta:</strong></label>
-                <input type="file" id="foto-upload" accept="image/*" style="width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ddd;">
+                <label style="color: #e0f7ff; font-weight: bold; display: block; margin-bottom: 10px;">Upload da Folha de Resposta:</label>
+                <input type="file" id="foto-upload" accept="image/*" class="form-field" style="width:100%; padding:12px; margin:10px 0; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff;">
                 <div id="preview-container" style="margin-top:10px; text-align:center; display:none;">
-                    <img id="foto-preview" style="max-width:100%; max-height:200px; border-radius:5px; border:1px solid #ddd;">
+                    <img id="foto-preview" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid rgba(255,255,255,0.3);">
                 </div>
             </div>
             
             <!-- Resultado do Escaneamento -->
             <div id="resultado-omr" style="margin-top:20px; display:none;">
-                <div style="background:#f8f9fa; padding:15px; border-radius:5px; border-left:4px solid #007cba;">
-                    <h4 style="margin:0 0 10px 0; color:#007cba;">Resultado do Escaneamento</h4>
-                    <p><strong>Respostas Detectadas:</strong> <span id="respostas-detectadas"></span></p>
-                    <p><strong>Nota Calculada:</strong> <span id="nota-calculada" style="font-size:1.2em; color:#28a745; font-weight:bold;"></span></p>
+                <div style="background: rgba(109, 213, 250, 0.1); padding:15px; border-radius:8px; border:1px solid rgba(109, 213, 250, 0.3);">
+                    <h4 style="margin:0 0 10px 0; color:#6dd5fa;">Resultado do Escaneamento</h4>
+                    <p style="color: #e0f7ff;"><strong>Respostas Detectadas:</strong> <span id="respostas-detectadas"></span></p>
+                    <p style="color: #e0f7ff;"><strong>Nota Calculada:</strong> <span id="nota-calculada" style="font-size:1.2em; color:#4CAF50; font-weight:bold;"></span></p>
                 </div>
             </div>
             
             <!-- Botões de Ação -->
-            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-                <button id="btn-escanear" onclick="executarOMR()" style="background:#28a745; color:white; padding:12px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center; flex-wrap: wrap;">
+                <button id="btn-escanear" onclick="executarOMR()" class="btn-nav" style="background: linear-gradient(135deg, #4CAF50, #45a049);">
                     📷 Escanear Gabarito
                 </button>
-                <button id="btn-aplicar" onclick="aplicarNota()" style="background:#007cba; color:white; padding:12px 20px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; display:none;">
+                <button id="btn-aplicar" onclick="aplicarNota()" class="btn-nav" style="background: linear-gradient(135deg, #6dd5fa, #2196f3); display:none;">
                     ✅ Aplicar Nota
                 </button>
             </div>
@@ -230,9 +234,9 @@
     
     function abrirModalOMR() {
         document.getElementById('modal-omr-info').innerHTML = 
-            `<div style="background:#e3f2fd; padding:15px; border-radius:5px; margin-bottom:15px;">
-                <p><strong>Aluno:</strong> ${nomeAtual} (${matriculaAtual})</p>
-                <p><strong>Avaliação:</strong> ${avaliacaoAtual}</p>
+            `<div style="background: rgba(109, 213, 250, 0.1); padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid rgba(109, 213, 250, 0.3);">
+                <p style="color: #e0f7ff; margin: 5px 0;"><strong>Aluno:</strong> ${nomeAtual} (${matriculaAtual})</p>
+                <p style="color: #e0f7ff; margin: 5px 0;"><strong>Avaliação:</strong> ${avaliacaoAtual}</p>
             </div>`;
         
         // Carregar provas disponíveis
