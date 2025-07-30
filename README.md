@@ -113,7 +113,7 @@ Este projeto é um sistema completo de gestão educacional desenvolvido em Djang
 - **Exportação**: Tecnologia PDF nativa
 - **OMR**: Sistema proprietário de leitura óptica
 
-## 📁 Estrutura do Projeto
+# Estrutura do Projeto
 
 ```
 piec1-master/
@@ -129,7 +129,7 @@ piec1-master/
 └── manage.py               # Gerenciador Django
 ```
 
-## 🎨 Interface
+# Interface
 
 O sistema possui uma interface moderna e intuitiva com:
 - Design responsivo para diferentes dispositivos
@@ -138,7 +138,7 @@ O sistema possui uma interface moderna e intuitiva com:
 - Feedback visual para ações do usuário
 - Tema profissional adequado para ambiente educacional
 
-## 📈 Vantagens do Sistema OMR
+# Vantagens do Sistema OMR
 
 1. **Precisão**: Correção automática elimina erros humanos
 2. **Velocidade**: Processamento instantâneo de centenas de provas
