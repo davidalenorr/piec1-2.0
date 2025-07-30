@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalhe da Disciplina</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <style>
+        #modal-va-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: flex;
+        }
+        #modal-va {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 8px;
+            min-width: 320px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            max-width: 90vw;
+            text-align: center;
+            color: #222;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if disciplina %}
+            <h2>{{ disciplina.nome }} - {{ disciplina.ano }}</h2>
+            
+            <!-- Botões de ação da disciplina -->
+            <div style="margin-bottom: 30px; text-align: center;">
+                <a href="{% url 'gerar_prova' %}?disciplina={{ disciplina.nome }}" class="btn" style="background: linear-gradient(90deg, #00c853 60%, #00791b 100%); margin-bottom: 10px;">🎯 Gerar Prova desta Disciplina</a>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="{% url 'cadastrar_questao' %}?disciplina={{ disciplina.nome }}" class="btn">📝 Cadastrar Questão</a>
+                    <a href="{% url 'lista_questoes' %}?disciplina={{ disciplina.nome }}" class="btn">👁️ Ver Questões</a>
+                </div>
+            </div>
+            
+            {% if sucesso %}
+                <div class="success">{{ sucesso }}</div>
+            {% endif %}
+            <div class="add-aluno-form">
+                <form method="post">
+                    {% csrf_token %}
+                    <label for="aluno">Adicionar aluno à disciplina:</label>
+                    <select name="aluno_matricula" id="aluno" required>
+                        <option value="">Selecione o aluno</option>
+                        {% for aluno in alunos_disponiveis %}
+                            <option value="{{ aluno.matricula }}">{{ aluno.nome }} ({{ aluno.matricula }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Adicionar</button>
+                </form>
+            </div>
+            <h3>Alunos da disciplina</h3>
+            {% if alunos_disciplina %}
+                <table class="table">
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Nome</th>
+                        <th>1VA</th>
+                        <th>2VA</th>
+                        <th>3VA</th>
+                        <th>Final</th>
+                        <th>Média Geral</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                    {% for aluno in alunos_disciplina %}
+                    <tr>
+                        <td>{{ aluno.matricula }}</td>
+                        <td>{{ aluno.nome }}</td>
+                        <td>{{ aluno.nota_1va|default:"-" }}</td>
+                        <td>{{ aluno.nota_2va|default:"-" }}</td>
+                        <td>{{ aluno.nota_3va|default:"-" }}</td>
+                        <td>{{ aluno.nota_final|default:"-" }}</td>
+                        <td>
+                            {% if aluno.media_geral is not None %}
+                                {{ aluno.media_geral|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if aluno.situacao == "APV" %}
+                                <span class="apv">APV</span>
+                            {% elif aluno.situacao == "RPV" %}
+                                <span class="rpv">RPV</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn-omr-mini" onclick="abrirModalVA('{{ aluno.matricula }}', '{{ aluno.nome }}')">📷</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <div class="subtitle">Nenhum aluno cadastrado nesta disciplina.</div>
+            {% endif %}
+        {% else %}
+            <p>Disciplina não encontrada.</p>
+        {% endif %}
+        <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+    </div>
+
+    <div id="modal-va-bg" style="display:none;">
+        <div id="modal-va">
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="close-modal" onclick="fecharModalVA()" style="color:#d32f2f; font-size:2em; background:none; border:none; cursor:pointer; margin-bottom:10px;">×</button>
+            </div>
+            <h3 id="modal-va-title">Selecionar Avaliação</h3>
+            <div id="modal-va-info">Selecione a avaliação:</div>
+            <div style="margin-top:18px;">
+                <button onclick="selecionarVA('1VA')">1VA</button>
+                <button onclick="selecionarVA('2VA')">2VA</button>
+                <button onclick="selecionarVA('3VA')">3VA</button>
+                <button onclick="selecionarVA('Final')">Final</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    let matriculaAtual = '';
+    let nomeAtual = '';
+    function abrirModalVA(matricula, nome) {
+        matriculaAtual = matricula;
+        nomeAtual = nome;
+        document.getElementById('modal-va-info').innerHTML = `<b>${nome}</b> (${matricula})<br>Selecione a avaliação:`;
+        document.getElementById('modal-va-bg').style.display = 'flex';
+    }
+    function fecharModalVA() {
+        document.getElementById('modal-va-bg').style.display = 'none';
+    }
+    function selecionarVA(avaliacao) {
+        fecharModalVA();
+    }
+    </script>
+</body>
+</html>

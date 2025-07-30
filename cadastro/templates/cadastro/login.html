@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Sistema de Notas</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Login</h2>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="cpf" placeholder="CPF" required>
+            <input type="password" name="senha" placeholder="Senha" required>
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+        <a href="{% url 'cadastro_usuario' %}" class="link">Não tem cadastro? Cadastre-se</a>
+        <a href="{% url 'home' %}" class="link">Voltar à Home</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alunos Cadastrados</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Alunos Cadastrados</h2>
+        {% if alunos %}
+            <table class="table">
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nome</th>
+                </tr>
+                {% for aluno in alunos %}
+                <tr>
+                    <td>{{ aluno.matricula }}</td>
+                    <td>{{ aluno.nome }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <div class="subtitle">Nenhum aluno cadastrado.</div>
+        {% endif %}
+        <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cadastrar Questão</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <style>
+        .questao-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .alternativas-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #6dd5fa;
+        }
+        
+        .alternativas-section h4 {
+            color: #6dd5fa;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .resposta-section {
+            background: rgba(109, 213, 250, 0.1);
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-left: 4px solid #00c853;
+        }
+        
+        .resposta-section h4 {
+            color: #00c853;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1em;
+            text-align: center;
+        }
+        
+        /* Forçar textarea arredondada */
+        .form-group textarea {
+            border-radius: 8px !important;
+            resize: vertical;
+        }
+        
+        /* Forçar radio group horizontal */
+        .radio-group {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 15px !important;
+            padding: 15px !important;
+        }
+        
+        .radio-group label {
+            display: flex !important;
+            align-items: center !important;
+            margin-bottom: 0 !important;
+            padding: 8px 15px !important;
+            background: rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .radio-group label:hover {
+            background: rgba(255,255,255,0.2) !important;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 8px !important;
+            margin-bottom: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        <h2>Cadastrar Nova Questão</h2>
+        
+        {% if sucesso %}
+            <div class="success-message">{{ sucesso }}</div>
+        {% endif %}
+        
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
+        <form method="post" class="questao-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="disciplina">📚 Disciplina:</label>
+                <select name="disciplina" id="disciplina" required>
+                    <option value="">Selecione uma disciplina</option>
+                    {% for disc in disciplinas %}
+                        <option value="{{ disc }}" {% if disc == disciplina_selecionada %}selected{% endif %}>{{ disc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="enunciado">❓ Enunciado da Questão:</label>
+                <textarea name="enunciado" id="enunciado" rows="4" required placeholder="Digite o enunciado da questão de forma clara e objetiva..."></textarea>
+            </div>
+            
+            <div class="alternativas-section">
+                <h4>📝 Alternativas</h4>
+                
+                <div class="form-group">
+                    <label for="alternativa_a">A)</label>
+                    <input type="text" name="alternativa_a" id="alternativa_a" required placeholder="Digite a alternativa A">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alternativa_b">B)</label>
+                    <input type="text" name="alternativa_b" id="alternativa_b" required placeholder="Digite a alternativa B">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alternativa_c">C)</label>
+                    <input type="text" name="alternativa_c" id="alternativa_c" required placeholder="Digite a alternativa C">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alternativa_d">D)</label>
+                    <input type="text" name="alternativa_d" id="alternativa_d" required placeholder="Digite a alternativa D">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alternativa_e">E)</label>
+                    <input type="text" name="alternativa_e" id="alternativa_e" required placeholder="Digite a alternativa E">
+                </div>
+            </div>
+            
+            <div class="resposta-section">
+                <h4>✅ Selecione a Resposta Correta</h4>
+                <div class="radio-group">
+                    <label><input type="radio" name="resposta_correta" value="A" id="resposta_a" required> A</label>
+                    <label><input type="radio" name="resposta_correta" value="B" id="resposta_b" required> B</label>
+                    <label><input type="radio" name="resposta_correta" value="C" id="resposta_c" required> C</label>
+                    <label><input type="radio" name="resposta_correta" value="D" id="resposta_d" required> D</label>
+                    <label><input type="radio" name="resposta_correta" value="E" id="resposta_e" required> E</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">✨ Cadastrar Questão</button>
+        </form>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+                <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">👁️ Ver Questões Cadastradas</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

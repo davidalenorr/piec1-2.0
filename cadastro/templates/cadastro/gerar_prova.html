@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gerar Prova</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        <h2>Gerar Nova Prova{% if disciplina_selecionada %} - {{ disciplina_selecionada }}{% endif %}</h2>
+        
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
+        {% if total_questoes > 0 %}
+            <div style="text-align: center; margin-bottom: 30px;">
+                <p><strong>Você tem {{ total_questoes }} questão{{ total_questoes|pluralize:"es" }} cadastrada{{ total_questoes|pluralize:"s" }}{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %}.</strong></p>
+                <p>Escolha o modo de seleção das questões para a prova:</p>
+            </div>
+            
+            <!-- Botões de seleção de modo -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" onclick="selecionarModo('automatico')" id="btn-automatico" class="btn modo-btn ativo" style="width: auto; padding: 12px 20px;">
+                        🎲 Seleção Automática
+                    </button>
+                    <a href="{% url 'selecionar_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" 
+                       class="btn modo-btn" style="width: auto; padding: 12px 20px; text-decoration: none; display: inline-block;">
+                        ✋ Seleção Manual
+                    </a>
+                </div>
+            </div>
+            
+            <form method="post" id="form-prova">
+                {% csrf_token %}
+                <input type="hidden" name="modo_selecao" id="modo_selecao" value="automatico">
+                
+                {% if not disciplina_selecionada %}
+                <div class="form-group">
+                    <label for="disciplina_filtro">Filtrar por Disciplina (opcional):</label>
+                    <select name="disciplina_filtro" id="disciplina_filtro">
+                        <option value="todas" {% if not disciplina_selecionada %}selected{% endif %}>Todas as disciplinas</option>
+                        {% for disc in disciplinas %}
+                            <option value="{{ disc }}" {% if disc == disciplina_selecionada %}selected{% endif %}>{{ disc }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="disciplina_filtro" value="{{ disciplina_selecionada }}">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="color: #6dd5fa;"><strong>📚 Disciplina: {{ disciplina_selecionada }}</strong></p>
+                </div>
+                {% endif %}
+                
+                <div class="form-group" id="div-quantidade">
+                    <label for="quantidade">Quantidade de questões na prova:</label>
+                    <input type="number" name="quantidade" id="quantidade" min="1" max="{{ total_questoes }}" value="10" required>
+                    <small style="color: #b3e0ff;">Máximo: {{ total_questoes }} questões</small>
+                </div>
+                
+                <div id="div-instrucao-manual" style="display: none; text-align: center; margin: 20px 0; padding: 15px; background: rgba(109, 213, 250, 0.1); border-radius: 8px; border-left: 4px solid #6dd5fa;">
+                    <p style="color: #6dd5fa; margin: 0;">
+                        <strong>💡 Seleção Manual:</strong> Clique no botão "Seleção Manual" acima para escolher exatamente quais questões incluir na prova.
+                    </p>
+                </div>
+                
+                <button type="submit" class="btn" id="btn-submit">🎲 Gerar Prova Automática</button>
+            </form>
+        {% else %}
+            <div class="subtitle">Você precisa cadastrar questões{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %} antes de gerar uma prova.</div>
+            <p>Clique no botão abaixo para começar a cadastrar suas questões.</p>
+            <a href="{% url 'cadastrar_questao' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">Cadastrar Primeira Questão{% if disciplina_selecionada %} para {{ disciplina_selecionada }}{% endif %}</a>
+        {% endif %}
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+                {% if total_questoes > 0 %}
+                    <a href="{% url 'lista_questoes' %}{% if disciplina_selecionada %}?disciplina={{ disciplina_selecionada }}{% endif %}" class="btn">👁️ Ver Questões Cadastradas</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .modo-btn {
+            background: rgba(255,255,255,0.1) !important;
+            border: 2px solid rgba(255,255,255,0.2) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .modo-btn.ativo {
+            background: linear-gradient(135deg, #1976d2, #42a5f5) !important;
+            border-color: #1976d2 !important;
+            transform: scale(1.02) !important;
+        }
+        
+        .modo-btn:hover {
+            background: rgba(255,255,255,0.2) !important;
+            border-color: rgba(255,255,255,0.4) !important;
+        }
+        
+        .modo-btn.ativo:hover {
+            background: linear-gradient(135deg, #005f99, #1976d2) !important;
+        }
+    </style>
+    
+    <script>
+        function selecionarModo(modo) {
+            // Esta função agora só é usada para modo automático
+            // O modo manual usa link direto
+            console.log('Modo automático selecionado');
+        }
+    </script>
+</body>
+</html>

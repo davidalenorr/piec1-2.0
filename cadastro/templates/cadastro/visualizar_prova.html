@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prova Gerada</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .container { 
+                max-width: none; 
+                margin: 0; 
+                background: white; 
+                color: black; 
+                box-shadow: none; 
+                padding: 20px;
+            }
+            body { 
+                background: white; 
+                color: black; 
+            }
+            .questao-prova {
+                page-break-inside: avoid;
+                margin-bottom: 25px;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            .folha-gabarito {
+                background: white;
+                color: black;
+            }
+            .cabecalho-gabarito h2, .cabecalho-gabarito h4 {
+                color: black;
+            }
+            .circulo-omr {
+                border: 2px solid black;
+                background: white;
+            }
+            .marcador-canto {
+                background: black;
+            }
+        }
+        
+        .questao-prova {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .questao-prova h3 {
+            margin-top: 0;
+            color: #6dd5fa;
+            text-align: left;
+        }
+        
+        .alternativas-prova {
+            margin: 15px 0;
+        }
+        
+        .alternativas-prova p {
+            margin: 10px 0;
+            padding: 5px 0;
+            line-height: 1.5;
+        }
+        
+        .cabecalho-prova {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 20px;
+        }
+        
+        .info-prova {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media print {
+            .cabecalho-prova {
+                border-bottom: 2px solid #333;
+            }
+            .questao-prova {
+                background: white;
+                border: 1px solid #ddd;
+                color: black;
+            }
+            .questao-prova h3 {
+                color: #333;
+            }
+        }
+        
+        /* Estilos para Folha de Gabarito OMR */
+        .page-break {
+            page-break-before: always;
+            height: 0;
+        }
+        
+        .folha-gabarito {
+            background: rgba(255, 255, 255, 0.98);
+            color: #333;
+            padding: 15px;
+            min-height: 95vh;
+            max-height: 100vh;
+            position: relative;
+            border: 2px solid #333;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        
+        .cabecalho-gabarito {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .cabecalho-gabarito h2 {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .info-gabarito {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .campo-info {
+            color: #333;
+            font-size: 12px;
+        }
+        
+        .instrucoes-gabarito {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            font-size: 10px;
+        }
+        
+        .instrucoes-gabarito h4 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .instrucoes-gabarito ul {
+            margin: 0;
+            padding-left: 15px;
+            color: #333;
+        }
+        
+        .instrucoes-gabarito li {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+        
+        .area-gabarito {
+            margin-top: 15px;
+            display: grid;
+            gap: 8px;
+            max-width: 100%;
+            grid-auto-flow: column;
+            justify-content: center;
+        }
+        
+        .linha-questao {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .numero-questao {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+            background: #e9ecef;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .alternativas-gabarito {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .alternativa-omr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .letra {
+            font-weight: bold;
+            font-size: 10px;
+            color: #333;
+        }
+        
+        .circulo-omr {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .circulo-omr:hover {
+            background: #f0f0f0;
+            transform: scale(1.1);
+        }
+        
+        /* Marcadores de alinhamento para OMR */
+        .marcadores-omr {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .marcador-canto {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+        }
+        
+        .marcador-superior-esquerdo {
+            top: 8px;
+            left: 8px;
+        }
+        
+        .marcador-superior-direito {
+            top: 8px;
+            right: 8px;
+        }
+        
+        .marcador-inferior-esquerdo {
+            bottom: 8px;
+            left: 8px;
+        }
+        
+        .marcador-inferior-direito {
+            bottom: 8px;
+            right: 8px;
+        }
+        
+        /* Ajustes especiais para muitas questões */
+        .area-gabarito[data-questoes="1"], 
+        .area-gabarito[data-questoes="2"], 
+        .area-gabarito[data-questoes="3"], 
+        .area-gabarito[data-questoes="4"], 
+        .area-gabarito[data-questoes="5"] {
+            grid-template-columns: repeat(1, minmax(300px, 1fr));
+            grid-template-rows: repeat(5, 1fr);
+            max-width: 400px;
+            margin: 15px auto;
+        }
+        
+        .area-gabarito[data-questoes="6"], 
+        .area-gabarito[data-questoes="7"], 
+        .area-gabarito[data-questoes="8"], 
+        .area-gabarito[data-questoes="9"], 
+        .area-gabarito[data-questoes="10"] {
+            grid-template-columns: repeat(1, minmax(300px, 1fr));
+            grid-template-rows: repeat(10, 1fr);
+            max-width: 400px;
+            margin: 15px auto;
+        }
+        
+        .area-gabarito[data-questoes]:is([data-questoes="11"], [data-questoes="12"], [data-questoes="13"], [data-questoes="14"], [data-questoes="15"]) {
+            grid-template-columns: repeat(2, minmax(250px, 1fr));
+            grid-template-rows: repeat(10, 1fr);
+            gap: 6px;
+        }
+        
+        .area-gabarito[data-questoes]:is([data-questoes="16"], [data-questoes="17"], [data-questoes="18"], [data-questoes="19"], [data-questoes="20"]) {
+            grid-template-columns: repeat(2, minmax(250px, 1fr));
+            grid-template-rows: repeat(10, 1fr);
+            gap: 4px;
+        }
+        
+        .area-gabarito[data-questoes]:is([data-questoes="13"], [data-questoes="14"], [data-questoes="15"], [data-questoes="16"], [data-questoes="17"], [data-questoes="18"]) {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+        
+        .area-gabarito[data-questoes]:is([data-questoes="19"], [data-questoes="20"]) {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+        
+        @media print {
+            .area-gabarito[data-questoes]:is([data-questoes="1"], [data-questoes="2"], [data-questoes="3"], [data-questoes="4"], [data-questoes="5"]) {
+                grid-template-columns: repeat(1, minmax(300px, 1fr));
+                grid-template-rows: repeat(5, 1fr);
+            }
+            
+            .area-gabarito[data-questoes]:is([data-questoes="6"], [data-questoes="7"], [data-questoes="8"], [data-questoes="9"], [data-questoes="10"]) {
+                grid-template-columns: repeat(1, minmax(300px, 1fr));
+                grid-template-rows: repeat(10, 1fr);
+            }
+            
+            .area-gabarito[data-questoes]:is([data-questoes="11"], [data-questoes="12"], [data-questoes="13"], [data-questoes="14"], [data-questoes="15"]) {
+                grid-template-columns: repeat(2, minmax(250px, 1fr));
+                grid-template-rows: repeat(10, 1fr);
+                gap: 4px;
+            }
+            
+            .area-gabarito[data-questoes]:is([data-questoes="16"], [data-questoes="17"], [data-questoes="18"], [data-questoes="19"], [data-questoes="20"]) {
+                grid-template-columns: repeat(2, minmax(250px, 1fr));
+                grid-template-rows: repeat(10, 1fr);
+                gap: 3px;
+            }
+            
+            .area-gabarito[data-questoes]:is([data-questoes="16"], [data-questoes="17"], [data-questoes="18"], [data-questoes="19"], [data-questoes="20"]) {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 3px;
+            }
+            
+            /* Para mais de 20 questões */
+            .area-gabarito[data-questoes]:is([data-questoes="21"], [data-questoes="22"], [data-questoes="23"], [data-questoes="24"], [data-questoes="25"], [data-questoes="26"], [data-questoes="27"], [data-questoes="28"], [data-questoes="29"], [data-questoes="30"]) {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 2px;
+            }
+            
+            .linha-questao {
+                padding: 2px;
+                font-size: 9px;
+            }
+            
+            .numero-questao {
+                width: 18px;
+                padding: 2px;
+                font-size: 10px;
+                margin-right: 5px;
+            }
+            
+            .circulo-omr {
+                width: 18px;
+                height: 18px;
+                border-width: 2px;
+            }
+            
+            /* Círculos padronizados para OMR - sempre 18px */
+            .area-gabarito[data-questoes]:is([data-questoes="1"], [data-questoes="2"], [data-questoes="3"], [data-questoes="4"], [data-questoes="5"]) .circulo-omr {
+                width: 18px;
+                height: 18px;
+                border-width: 2px;
+            }
+            
+            .area-gabarito[data-questoes]:is([data-questoes="6"], [data-questoes="7"], [data-questoes="8"], [data-questoes="9"], [data-questoes="10"]) .circulo-omr {
+                width: 18px;
+                height: 18px;
+                border-width: 2px;
+            }
+            
+            .alternativas-gabarito {
+                gap: 6px;
+            }
+            
+            .letra {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="no-print" style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        
+        <div class="cabecalho-prova">
+            <h2>PROVA - {{ disciplina }}</h2>
+            <div class="info-prova">
+                <span><strong>Professor:</strong> {{ request.session.nome_completo }}</span>
+                <span><strong>Data:</strong> ___/___/______</span>
+            </div>
+            <div class="info-prova">
+                <span><strong>Nome do Aluno:</strong> _________________________________</span>
+                <span><strong>Questões:</strong> {{ quantidade }}</span>
+            </div>
+        </div>
+        
+        {% for questao in questoes %}
+            <div class="questao-prova">
+                <h3>{{ forloop.counter }}. {{ questao.enunciado }}</h3>
+                
+                <div class="alternativas-prova">
+                    <p><strong>a)</strong> {{ questao.alternativa_a }}</p>
+                    <p><strong>b)</strong> {{ questao.alternativa_b }}</p>
+                    <p><strong>c)</strong> {{ questao.alternativa_c }}</p>
+                    <p><strong>d)</strong> {{ questao.alternativa_d }}</p>
+                    <p><strong>e)</strong> {{ questao.alternativa_e }}</p>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- FOLHA DE GABARITO OMR -->
+        <div class="page-break"></div>
+        <div class="folha-gabarito">
+            <div class="cabecalho-gabarito">
+                <h2>📋 FOLHA DE GABARITO OMR</h2>
+                <div class="info-gabarito">
+                    <div class="campo-info">
+                        <strong>Nome:</strong> _________________________________
+                    </div>
+                    <div class="campo-info">
+                        <strong>Matrícula:</strong> _________________
+                    </div>
+                    <div class="campo-info">
+                        <strong>Disciplina:</strong> {{ disciplina }}
+                    </div>
+                    <div class="campo-info">
+                        <strong>Data:</strong> ___/___/____ <strong>Questões:</strong> {{ quantidade }}
+                    </div>
+                </div>
+                
+                <div class="instrucoes-gabarito">
+                    <h4>📝 INSTRUÇÕES:</h4>
+                    <ul>
+                        <li>• Use caneta esferográfica preta ou azul</li>
+                        <li>• Preencha completamente os círculos ⚫</li>
+                        <li>• Marque apenas UMA alternativa por questão</li>
+                        <li>• Não rasure nem dobre esta folha</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="area-gabarito" data-questoes="{{ quantidade }}">
+                {% for questao in questoes %}
+                    <div class="linha-questao">
+                        <div class="numero-questao">{{ forloop.counter }}</div>
+                        <div class="alternativas-gabarito">
+                            <div class="alternativa-omr">
+                                <span class="letra">A</span>
+                                <div class="circulo-omr" data-questao="{{ forloop.counter }}" data-alternativa="A"></div>
+                            </div>
+                            <div class="alternativa-omr">
+                                <span class="letra">B</span>
+                                <div class="circulo-omr" data-questao="{{ forloop.counter }}" data-alternativa="B"></div>
+                            </div>
+                            <div class="alternativa-omr">
+                                <span class="letra">C</span>
+                                <div class="circulo-omr" data-questao="{{ forloop.counter }}" data-alternativa="C"></div>
+                            </div>
+                            <div class="alternativa-omr">
+                                <span class="letra">D</span>
+                                <div class="circulo-omr" data-questao="{{ forloop.counter }}" data-alternativa="D"></div>
+                            </div>
+                            <div class="alternativa-omr">
+                                <span class="letra">E</span>
+                                <div class="circulo-omr" data-questao="{{ forloop.counter }}" data-alternativa="E"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Marcadores de alinhamento para OMR -->
+            <div class="marcadores-omr">
+                <div class="marcador-canto marcador-superior-esquerdo"></div>
+                <div class="marcador-canto marcador-superior-direito"></div>
+                <div class="marcador-canto marcador-inferior-esquerdo"></div>
+                <div class="marcador-canto marcador-inferior-direito"></div>
+            </div>
+        </div>
+        
+        <div class="no-print" style="margin-top: 30px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <button onclick="window.print()" class="btn">🖨️ Imprimir Prova</button>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <a href="{% url 'gerar_prova' %}" class="btn">🔄 Gerar Nova Prova</a>
+                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+            </div>
+        </div>
+        
+        <div class="no-print" style="margin-top: 20px; text-align: center;">
+            <h3>Gabarito (Para o Professor)</h3>
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
+                {% for questao in questoes %}
+                    <span style="margin-right: 15px;"><strong>{{ forloop.counter }}:</strong> {{ questao.resposta_correta|upper }}</span>
+                    {% if forloop.counter|divisibleby:5 %}<br>{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Demonstração do funcionamento dos círculos OMR (apenas visual)
+        document.querySelectorAll('.circulo-omr').forEach(circulo => {
+            circulo.addEventListener('click', function() {
+                // Limpar outras seleções na mesma linha
+                const linha = this.closest('.linha-questao');
+                linha.querySelectorAll('.circulo-omr').forEach(c => {
+                    c.style.background = 'white';
+                });
+                
+                // Marcar o círculo clicado
+                this.style.background = '#333';
+            });
+        });
+        
+        // Limpar todas as marcações ao imprimir
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.circulo-omr').forEach(circulo => {
+                circulo.style.background = 'white';
+            });
+        });
+    </script>
+</body>
+</html>

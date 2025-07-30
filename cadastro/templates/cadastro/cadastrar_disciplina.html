@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cadastrar Disciplina</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Cadastrar Disciplina</h2>
+        {% if sucesso %}
+            <div class="success">{{ sucesso }}</div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label for="id_nome">Nome da Disciplina</label>
+            <input type="text" name="nome" id="id_nome" required placeholder="Ex: Matemática Discreta 1" maxlength="100">
+
+            <label for="id_ano">Ano/Período</label>
+            <select name="ano" id="id_ano" required>
+                <option value="">Selecione...</option>
+                <option value="2025.2">2025.2</option>
+            </select>
+
+            <button type="submit" class="btn">Cadastrar</button>
+        </form>
+        <a href="{% url 'index' %}" class="back-link">Voltar ao painel do professor</a>
+    </div>
+</body>
+</html>

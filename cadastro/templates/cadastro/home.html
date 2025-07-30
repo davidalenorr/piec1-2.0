@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Notas</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📚</div>
+        <h1>Sistema de Notas</h1>
+        <div class="subtitle">Gerencie disciplinas e alunos.</div>
+        <a href="{% url 'login' %}" class="btn">Login</a>
+        <a href="{% url 'cadastro_usuario' %}" class="btn">Cadastro</a>
+    </div>
+</body>
+</html>

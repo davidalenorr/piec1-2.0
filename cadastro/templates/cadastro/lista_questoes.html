@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Questões Cadastradas</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        <h2>Questões Cadastradas{% if disciplina_filtro %} - {{ disciplina_filtro }}{% endif %}</h2>
+        
+        {% if questoes %}
+            {% for questao in questoes %}
+                <div class="questao-card" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                    <h3>Questão {{ forloop.counter }}</h3>
+                    <p><strong>Disciplina:</strong> {{ questao.disciplina_nome }}</p>
+                    <p><strong>Enunciado:</strong> {{ questao.enunciado }}</p>
+                    
+                    <div class="alternativas">
+                        <p><strong>A)</strong> {{ questao.alternativa_a }}</p>
+                        <p><strong>B)</strong> {{ questao.alternativa_b }}</p>
+                        <p><strong>C)</strong> {{ questao.alternativa_c }}</p>
+                        <p><strong>D)</strong> {{ questao.alternativa_d }}</p>
+                        <p><strong>E)</strong> {{ questao.alternativa_e }}</p>
+                    </div>
+                    
+                    <p><strong>Resposta Correta:</strong> <span style="color: green; font-weight: bold;">{{ questao.resposta_correta }}</span></p>
+                </div>
+            {% endfor %}
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <p><strong>Total de questões cadastradas: {{ total_questoes }}</strong></p>
+                {% if total_questoes > 0 %}
+                    <p style="color: #00c853;">✓ Você já pode gerar provas com {{ total_questoes }} questão{{ total_questoes|pluralize:"es" }}!</p>
+                    <p style="color: #6dd5fa;">Quando criar uma prova, você poderá escolher quantas questões usar (de 1 até {{ total_questoes }}).</p>
+                {% else %}
+                    <p style="color: #ff9800;">Comece cadastrando questões para poder gerar provas personalizadas.</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="subtitle">Nenhuma questão cadastrada ainda.</div>
+            <p>Comece cadastrando suas primeiras questões para poder gerar provas no futuro.</p>
+        {% endif %}
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;">
+                <a href="{% url 'cadastrar_questao' %}{% if disciplina_filtro %}?disciplina={{ disciplina_filtro }}{% endif %}" class="btn">📝 Cadastrar Nova Questão</a>
+                {% if total_questoes > 0 %}
+                    <a href="{% url 'gerar_prova' %}{% if disciplina_filtro %}?disciplina={{ disciplina_filtro }}{% endif %}" class="btn" style="background: linear-gradient(90deg, #00c853 60%, #00791b 100%);">🎯 Gerar Prova</a>
+                {% endif %}
+            </div>
+            <div style="text-align: center;">
+                <a href="{% url 'index' %}" class="btn">🏠 Voltar ao Painel</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

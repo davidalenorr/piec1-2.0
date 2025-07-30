@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Selecionar Questões para Prova</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cadastro/style.css' %}">
+    <style>
+        .questao-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .questao-card:hover {
+            border-color: rgba(109, 213, 250, 0.5);
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(109, 213, 250, 0.15);
+        }
+        
+        .questao-card.selecionada {
+            border-color: #00c853;
+            background: rgba(0, 200, 83, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.2);
+        }
+        
+        .questao-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            transform: scale(1.5);
+            accent-color: #00c853;
+            cursor: pointer;
+        }
+        
+        .questao-enunciado {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-right: 40px;
+            line-height: 1.5;
+        }
+        
+        .questao-alternativas {
+            margin-left: 20px;
+        }
+        
+        .questao-alternativa {
+            color: #b3e0ff;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .questao-alternativa.correta {
+            color: #00c853;
+            font-weight: bold;
+        }
+        
+        .questao-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .questao-disciplina {
+            color: #6dd5fa;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .questao-resposta {
+            background: rgba(0, 200, 83, 0.2);
+            color: #00c853;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .contador-selecionadas {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(25, 118, 210, 0.3);
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .contador-selecionadas:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(25, 118, 210, 0.4);
+        }
+        
+        .contador-selecionadas.destaque {
+            animation: pulse-contador 0.6s ease-in-out;
+        }
+        
+        @keyframes pulse-contador {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .botoes-acao {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent, rgba(0, 34, 68, 0.95));
+            padding: 20px 0;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align:right;">
+            <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+        </div>
+        
+        <h2>✋ Selecionar Questões para Prova</h2>
+        
+        {% if disciplina_filtro and disciplina_filtro != 'todas' %}
+            <div style="text-align: center; margin-bottom: 20px;">
+                <p style="color: #6dd5fa;"><strong>📚 Disciplina: {{ disciplina_filtro }}</strong></p>
+            </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <p style="color: #b3e0ff;">
+                <strong>{{ total_questoes }} questão{{ total_questoes|pluralize:"es" }} disponível{{ total_questoes|pluralize:"is" }}</strong>
+            </p>
+            <p style="color: #6dd5fa;">Marque as questões que deseja incluir na prova clicando nos checkbox ☑️</p>
+        </div>
+        
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
+        {% if questoes %}
+            <form method="post" id="form-selecao">
+                {% csrf_token %}
+                
+                <div id="lista-questoes">
+                    {% for questao in questoes %}
+                        <div class="questao-card" data-questao-id="{{ questao.id }}">
+                            <input type="checkbox" name="questoes_selecionadas" value="{{ questao.id }}" 
+                                   class="questao-checkbox" id="questao_{{ questao.id }}"
+                                   onchange="atualizarContador()">
+                            
+                            <div class="questao-enunciado">
+                                <strong>{{ forloop.counter }}.</strong> {{ questao.enunciado }}
+                            </div>
+                            
+                            <div class="questao-alternativas">
+                                <div class="questao-alternativa {% if questao.resposta_correta == 'A' %}correta{% endif %}">
+                                    <strong>A)</strong> {{ questao.alternativa_a }}
+                                </div>
+                                <div class="questao-alternativa {% if questao.resposta_correta == 'B' %}correta{% endif %}">
+                                    <strong>B)</strong> {{ questao.alternativa_b }}
+                                </div>
+                                <div class="questao-alternativa {% if questao.resposta_correta == 'C' %}correta{% endif %}">
+                                    <strong>C)</strong> {{ questao.alternativa_c }}
+                                </div>
+                                <div class="questao-alternativa {% if questao.resposta_correta == 'D' %}correta{% endif %}">
+                                    <strong>D)</strong> {{ questao.alternativa_d }}
+                                </div>
+                                <div class="questao-alternativa {% if questao.resposta_correta == 'E' %}correta{% endif %}">
+                                    <strong>E)</strong> {{ questao.alternativa_e }}
+                                </div>
+                            </div>
+                            
+                            <div class="questao-info">
+                                <span class="questao-disciplina">📚 {{ questao.disciplina_nome }}</span>
+                                <span class="questao-resposta">Resposta: {{ questao.resposta_correta }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="botoes-acao">
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" onclick="selecionarTodas()" class="btn-secondary">
+                            ☑️ Selecionar Todas
+                        </button>
+                        <button type="button" onclick="desmarcarTodas()" class="btn-secondary">
+                            ❌ Desmarcar Todas
+                        </button>
+                        <button type="submit" class="btn" id="btn-gerar-prova" disabled>
+                            📄 Gerar Prova com Questões Selecionadas
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="contador-selecionadas" id="contador">
+                <span id="num-selecionadas">0</span> questão(ões) selecionada(s)
+            </div>
+            
+        {% else %}
+            <div class="subtitle">Nenhuma questão encontrada{% if disciplina_filtro and disciplina_filtro != 'todas' %} para {{ disciplina_filtro }}{% endif %}.</div>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="{% url 'cadastrar_questao' %}{% if disciplina_filtro and disciplina_filtro != 'todas' %}?disciplina={{ disciplina_filtro }}{% endif %}" class="btn">
+                    Cadastrar Questões
+                </a>
+            </div>
+        {% endif %}
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{% url 'gerar_prova' %}{% if disciplina_filtro and disciplina_filtro != 'todas' %}?disciplina={{ disciplina_filtro }}{% endif %}" class="btn-secondary">
+                🔙 Voltar para Gerar Prova
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        function atualizarContador() {
+            const checkboxes = document.querySelectorAll('input[name="questoes_selecionadas"]:checked');
+            const contador = checkboxes.length;
+            const btnGerar = document.getElementById('btn-gerar-prova');
+            const numSelecionadas = document.getElementById('num-selecionadas');
+            const contadorDiv = document.getElementById('contador');
+            
+            numSelecionadas.textContent = contador;
+            
+            // Animar contador
+            contadorDiv.classList.add('destaque');
+            setTimeout(() => {
+                contadorDiv.classList.remove('destaque');
+            }, 600);
+            
+            if (contador > 0) {
+                btnGerar.disabled = false;
+                btnGerar.style.opacity = '1';
+                btnGerar.innerHTML = `📄 Gerar Prova com ${contador} Questão${contador > 1 ? 'ões' : ''} Selecionada${contador > 1 ? 's' : ''}`;
+                contadorDiv.style.background = 'linear-gradient(135deg, #00c853, #4caf50)';
+            } else {
+                btnGerar.disabled = true;
+                btnGerar.style.opacity = '0.5';
+                btnGerar.innerHTML = '📄 Gerar Prova com Questões Selecionadas';
+                contadorDiv.style.background = 'linear-gradient(135deg, #1976d2, #42a5f5)';
+            }
+            
+            // Atualizar visual das cards
+            document.querySelectorAll('.questao-card').forEach(card => {
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    card.classList.add('selecionada');
+                } else {
+                    card.classList.remove('selecionada');
+                }
+            });
+        }
+        
+        function selecionarTodas() {
+            document.querySelectorAll('input[name="questoes_selecionadas"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            atualizarContador();
+        }
+        
+        function desmarcarTodas() {
+            document.querySelectorAll('input[name="questoes_selecionadas"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            atualizarContador();
+        }
+        
+        // Permitir clicar na card para selecionar
+        document.querySelectorAll('.questao-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                    atualizarContador();
+                }
+            });
+        });
+        
+        // Adicionar efeito sonoro visual ao clicar
+        document.querySelectorAll('.questao-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const card = this.closest('.questao-card');
+                if (this.checked) {
+                    card.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        card.style.transform = '';
+                    }, 200);
+                }
+            });
+        });
+        
+        // Confirmar antes de gerar prova
+        document.getElementById('form-selecao').addEventListener('submit', function(e) {
+            const selecionadas = document.querySelectorAll('input[name="questoes_selecionadas"]:checked').length;
+            if (selecionadas === 0) {
+                e.preventDefault();
+                alert('⚠️ Você deve selecionar pelo menos uma questão!');
+                return false;
+            }
+            
+            const confirmacao = confirm(`🎯 Gerar prova com ${selecionadas} questão${selecionadas > 1 ? 'ões' : ''} selecionada${selecionadas > 1 ? 's' : ''}?`);
+            if (!confirmacao) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
