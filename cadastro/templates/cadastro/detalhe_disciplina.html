@@ -342,16 +342,26 @@
             const resultado = await response.json();
             
             if (resultado.success) {
-                // Mostrar resultado
-                document.getElementById('respostas-detectadas').textContent = resultado.respostas_detectadas.join(', ');
-                document.getElementById('nota-calculada').textContent = resultado.nota + '/10';
+                // Mostrar resultado detalhado
+                const respostasTexto = resultado.respostas_detectadas
+                    .map((resp, index) => `${index + 1}: ${resp || 'N/A'}`)
+                    .join(', ');
+                
+                document.getElementById('respostas-detectadas').textContent = respostasTexto;
+                document.getElementById('nota-calculada').textContent = 
+                    `${resultado.nota}/10 (${resultado.acertos}/${resultado.total} acertos)`;
+                
                 document.getElementById('resultado-omr').style.display = 'block';
                 document.getElementById('btn-aplicar').style.display = 'inline-block';
                 
+                // Armazenar dados para aplicação da nota
                 provaAtual = provaId;
                 notaCalculada = resultado.nota;
                 
                 btnEscanear.textContent = '✅ Escaneamento Concluído';
+                
+                // Log para debug (remover em produção)
+                console.log('Resultado OMR:', resultado);
             } else {
                 alert('Erro no escaneamento: ' + resultado.error);
                 btnEscanear.textContent = '📷 Escanear Gabarito';

@@ -630,7 +630,7 @@ def visualizar_gabarito(request, prova_id):
 def processar_omr(request):
     """
     Função para processar respostas OMR e calcular notas
-    Simula o processamento OMR até a implementação real
+    Utiliza OpenCV para detectar marcações em gabaritos
     """
     if request.method == 'POST':
         prova_id = request.POST.get('prova_id')
@@ -642,47 +642,68 @@ def processar_omr(request):
             prova = Prova.objects.get(id=prova_id)
             gabarito = prova.gabarito
             
-            # SIMULAÇÃO DE OMR - Substituir pela implementação real
-            # Por enquanto, vamos simular respostas detectadas
-            import random
+            if not foto_gabarito:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Nenhuma imagem foi enviada'
+                })
+            
+            # Processar imagem com OpenCV
+            from .omr_processor import process_uploaded_image
+            
+            # Obter número de questões da prova
+            questoes_ids = prova.get_questoes_ids_list()
+            num_questoes = len(questoes_ids)
+            
+            # Processar OMR
+            respostas_detectadas = process_uploaded_image(foto_gabarito, num_questoes)
+            
+            # Obter gabarito correto
             respostas_corretas = gabarito.get_respostas_dict()
-            questoes_ids = list(respostas_corretas.keys())
             
-            # Simular detecção com 70-90% de acerto
-            respostas_detectadas = []
-            for questao_id in questoes_ids:
-                resposta_correta = respostas_corretas[questao_id]
-                # 80% de chance de acertar
-                if random.random() < 0.8:
-                    respostas_detectadas.append(resposta_correta)
-                else:
-                    # Escolher uma alternativa aleatória diferente
-                    opcoes = ['A', 'B', 'C', 'D', 'E']
-                    opcoes.remove(resposta_correta)
-                    respostas_detectadas.append(random.choice(opcoes))
-            
-            # Calcular nota baseada na simulação
+            # Calcular nota
             acertos = 0
             for i, questao_id in enumerate(questoes_ids):
-                if respostas_detectadas[i] == respostas_corretas[questao_id]:
+                questao_id_str = str(questao_id)
+                if (i < len(respostas_detectadas) and 
+                    questao_id_str in respostas_corretas and
+                    respostas_detectadas[i] and
+                    respostas_detectadas[i].upper() == respostas_corretas[questao_id_str].upper()):
                     acertos += 1
             
             total = len(questoes_ids)
-            nota_final = round((acertos / total) * 10, 1)
+            nota_final = round((acertos / total) * 10, 1) if total > 0 else 0
             
-            return JsonResponse({
+            # Preparar resultado
+            resultado = {
                 'success': True,
                 'respostas_detectadas': respostas_detectadas,
                 'acertos': acertos,
                 'total': total,
-                'nota': nota_final
-            })
+                'nota': nota_final,
+                'detalhes': {
+                    'prova_id': prova_id,
+                    'aluno_matricula': aluno_matricula,
+                    'avaliacao': avaliacao,
+                    'questoes_ids': questoes_ids,
+                    'respostas_corretas': list(respostas_corretas.values())
+                }
+            }
             
+            return JsonResponse(resultado)
+            
+        except Prova.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Prova não encontrada'
+            })
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': f'Erro no processamento OMR: {str(e)}'
             })
+    
+    return JsonResponse({'success': False, 'error': 'Método não permitido'})
     
     return JsonResponse({'success': False, 'error': 'Método não permitido'})
 
