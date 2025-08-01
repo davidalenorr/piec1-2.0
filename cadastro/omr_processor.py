@@ -7,33 +7,33 @@ import math
 import json
 import os
 import re
+import tempfile
 
 
 class OMRProcessor:
-    """Classe para processamento de gabaritos OMR"""
+    """Processador de gabaritos OMR (Optical Mark Recognition) para sistema de cadastro"""
     
     def __init__(self):
         self.debug = False
         self.debug_dir = None
         
     def set_debug(self, debug=True):
-        """Ativa/desativa modo debug para visualização"""
+        """Ativa modo debug para salvar imagens de análise"""
         self.debug = debug
         if debug:
-            # Cria diretório de debug se não existir
             self.debug_dir = os.path.join(os.path.dirname(__file__), '..', 'debug_omr')
             os.makedirs(self.debug_dir, exist_ok=True)
     
     def process_omr_image(self, image_path, num_questions=5):
         """
-        Processa uma imagem de gabarito OMR e retorna as respostas detectadas
+        Processa gabarito OMR e detecta respostas marcadas
         
         Args:
-            image_path: Caminho para a imagem do gabarito
-            num_questions: Número de questões esperadas no gabarito
+            image_path: Caminho da imagem do gabarito
+            num_questions: Número de questões (5, 10, 15 ou 20)
             
         Returns:
-            list: Lista de respostas detectadas ['A', 'B', 'C', ...]
+            list: Respostas detectadas ['A', 'B', 'C', ...] ou [''] para não detectadas
         """
         try:
             # Carregar e preprocessar a imagem
@@ -48,55 +48,40 @@ class OMRProcessor:
                 image = imutils.resize(image, width=800)
             original = image.copy()
             
-            # Converter para escala de cinza
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Melhorar contraste adaptativo
             clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
             enhanced = clahe.apply(gray)
             
-            # Aplicar filtro Gaussiano para reduzir ruído
             blurred = cv2.GaussianBlur(enhanced, (5, 5), 0)
             
-            # Para gabaritos maiores, usar threshold mais agressivo
             if num_questions > 10:
-                # Aplicar threshold binário simples
                 _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-                
-                # Aplicar operações morfológicas mais agressivas
                 kernel = np.ones((2, 2), np.uint8)
                 thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
                 thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
             else:
-                # Aplicar threshold adaptativo com parâmetros ajustados
                 thresh = cv2.adaptiveThreshold(
                     blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
                     cv2.THRESH_BINARY_INV, 13, 3
                 )
-                
-                # Aplicar operações morfológicas para limpar a imagem
                 kernel = np.ones((3, 3), np.uint8)
                 thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
             
-            # Salvar imagens de debug se habilitado
             if self.debug and self.debug_dir:
                 cv2.imwrite(os.path.join(self.debug_dir, "original_image.jpg"), original)
                 cv2.imwrite(os.path.join(self.debug_dir, "enhanced_image.jpg"), enhanced)
                 cv2.imwrite(os.path.join(self.debug_dir, "threshold_image.jpg"), thresh)
             
-            # Encontrar contornos
             cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             cnts = imutils.grab_contours(cnts)
             
-            # Filtrar contornos circulares (bolhas de resposta)
             question_cnts = []
             
             for c in cnts:
-                # Calcular área e perímetro
                 area = cv2.contourArea(c)
                 perimeter = cv2.arcLength(c, True)
                 
-                # Filtrar por área (ajustar conforme necessário)
                 if area > 100 and area < 2500:
                     # Calcular circularidade
                     if perimeter > 0:
@@ -115,21 +100,15 @@ class OMRProcessor:
             if len(question_cnts) == 0:
                 return self._fallback_detection(thresh, num_questions)
             
-            # Melhorar a ordenação por posição vertical primeiro (questões) e depois horizontal (alternativas)
-            # Agrupamento por proximidade vertical
             y_coords = [cv2.boundingRect(c)[1] for c in question_cnts]
             question_rows = []
             current_row = []
             last_y = -100
-            
-            # Definir um limiar para considerar mesma linha
             threshold_same_row = 20
             
-            # Ordenar todos os contornos por posição vertical
             sorted_indices = sorted(range(len(y_coords)), key=lambda i: y_coords[i])
             sorted_cnts = [question_cnts[i] for i in sorted_indices]
             
-            # Agrupar contornos por linha (questões)
             for cnt in sorted_cnts:
                 y = cv2.boundingRect(cnt)[1]
                 if abs(y - last_y) > threshold_same_row and current_row:
@@ -142,26 +121,18 @@ class OMRProcessor:
             if current_row:
                 question_rows.append(current_row)
             
-            # Ordenar cada linha horizontalmente (alternativas A-E)
             question_rows = [contours.sort_contours(row, method="left-to-right")[0] for row in question_rows]
             
-            # Detectar respostas marcadas
             detected_answers = []
-            questions_per_row = 5  # A, B, C, D, E
+            questions_per_row = 5
             
-            # Processar cada linha (questão)
             for row_cnts in question_rows:
                 if len(row_cnts) < questions_per_row:
-                    # Pular linhas incompletas
                     continue
                 
-                # Ordenar por posição horizontal (A, B, C, D, E) se necessário
-                # (já ordenados pelo agrupamento acima)
                 if len(row_cnts) > questions_per_row:
-                    # Se temos mais de 5 contornos, pegar apenas os 5 primeiros
                     row_cnts = row_cnts[:questions_per_row]
                 
-                # Verificar qual alternativa está marcada
                 max_filled = 0
                 answer_index = -1 # Usar -1 para indicar nenhuma resposta
                 filled_percentages = []
@@ -176,52 +147,40 @@ class OMRProcessor:
                     mask = cv2.bitwise_and(thresh, thresh, mask=mask)
                     filled_pixels = cv2.countNonZero(mask)
                     
-                    # Calcular percentual de preenchimento (razão entre pixels preenchidos e área total)
                     total_area = cv2.contourArea(cnt)
                     fill_percentage = filled_pixels / max(total_area, 1) * 100
                     filled_percentages.append(fill_percentage)
                     
-                    # Atualizar resposta se mais preenchida
                     if filled_pixels > max_filled:
                         max_filled = filled_pixels
                         answer_index = j
                         
-                # Verificar se temos um contraste claro entre as alternativas (para evitar falsos positivos)
                 if len(filled_percentages) >= 2:
-                    # Ordenar percentuais de preenchimento em ordem decrescente
                     sorted_percentages = sorted(filled_percentages, reverse=True)
-                    # Se a diferença entre os dois maiores percentuais for pequena, podemos ter um caso ambíguo
                     if len(sorted_percentages) > 1 and sorted_percentages[0] - sorted_percentages[1] < 15:
-                        # Se a diferença é pequena, podemos aplicar um limiar mais rigoroso
-                        if max_filled < 40:  # Ajustar este valor conforme necessário
+                        if max_filled < 40:
                             answer_index = -1
                 
-                # Converter índice para letra
-                if answer_index != -1 and max_filled > 30:  # Threshold mínimo para considerar marcado
-                    detected_answers.append(chr(65 + answer_index))  # A=65, B=66, etc.
+                if answer_index != -1 and max_filled > 30:
+                    detected_answers.append(chr(65 + answer_index))
                 else:
-                    detected_answers.append('')  # Não marcado
+                    detected_answers.append('')
             
-            # Garantir que temos o número correto de respostas
             while len(detected_answers) < num_questions:
                 detected_answers.append('')
                 
-            # Se a detecção regular não funcionou bem (muitos resultados vazios), tentar abordagem alternativa
-            if detected_answers.count('') > num_questions * 0.5:  # Se mais de 50% são vazios
+            if detected_answers.count('') > num_questions * 0.5:
                 print("Detecção regular com muitos resultados vazios, tentando abordagem de grade fixa")
                 grid_results = self._try_grid_approach(image, thresh, num_questions)
                 
-                # Se a abordagem de grade trouxer mais resultados, usar ela
                 if grid_results.count('') < detected_answers.count(''):
                     print(f"Abordagem de grade melhor: {grid_results.count('')} vs {detected_answers.count('')} questões vazias")
                     detected_answers = grid_results
                 else:
                     print("Mantendo resultados da detecção regular")
                     
-            # Detectar tipo de gabarito baseado no número de questões e tentar método específico primeiro
             filename = os.path.basename(image_path).lower() if image_path else ""
             
-            # Para gabarito de 20 questões, usar método específico
             if num_questions == 20:
                 print("Detectado gabarito de 20 questões, usando reconhecimento otimizado")
                 specific_results = self._process_20_questions_gabarito(image, thresh)
@@ -239,22 +198,18 @@ class OMRProcessor:
                     print("Detectado gabarito G5 específico, usando reconhecimento otimizado")
                     specific_results = self._process_specific_g5(image, thresh)
                     
-                    # Se tiver resultados suficientes, usar
                     if specific_results and specific_results.count('') < detected_answers.count(''):
                         detected_answers = specific_results
                 
-                # Verificar se é um gabarito de 10 questões
                 elif re.search(r'g10\-(p|v)', filename) and num_questions == 10:
                     print("Detectado gabarito G10 específico, usando reconhecimento otimizado")
                     specific_results = self._process_specific_g10(image, thresh)
                     
-                    # Debug: mostrar os resultados
                     print(f"Resultados específicos G10: {specific_results}")
                     print(f"Resultados detectados originais: {detected_answers}")
                     print(f"Específicos vazios: {specific_results.count('') if specific_results else 'N/A'}")
                     print(f"Originais vazios: {detected_answers.count('')}")
                     
-                    # Para G10, sempre usar os resultados específicos se disponíveis
                     if specific_results and len(specific_results) == num_questions:
                         print("Usando resultados específicos G10")
                         detected_answers = specific_results
@@ -268,41 +223,27 @@ class OMRProcessor:
             return [''] * num_questions
             
     def _try_grid_approach(self, image, thresh, num_questions=5):
-        """
-        Tenta detectar respostas usando uma abordagem de grade fixa
-        """
+        """Detecção usando abordagem de grade fixa"""
         try:
-            # Ajustar tamanho baseado no número de questões
             if num_questions <= 10:
                 target_size = (800, 1100)
             else:
-                # Para 15-20 questões, usar resolução maior
                 target_size = (1000, 1400)
             
-            # Redimensionar para tamanho padrão
             image = cv2.resize(image, target_size)
             thresh = cv2.resize(thresh, target_size)
             
-            # Definir regiões de interesse para cada questão (ajustar conforme a imagem)
-            # Formato: [y_start, y_end, [x_positions para A, B, C, D, E]]
             roi_regions = []
             
-            # Para o gabarito de 5 questões, definir posições precisas
             if num_questions <= 5:
                 roi_regions = [
-                    # Questão 1 - linha 1
                     [475, 525, [450, 500, 550, 600, 650]],
-                    # Questão 2 - linha 2
                     [540, 590, [450, 500, 550, 600, 650]],
-                    # Questão 3 - linha 3
                     [605, 655, [450, 500, 550, 600, 650]],
-                    # Questão 4 - linha 4
                     [670, 720, [450, 500, 550, 600, 650]],
-                    # Questão 5 - linha 5
                     [735, 785, [450, 500, 550, 600, 650]],
                 ]
             elif num_questions <= 10:
-                # Configuração para 10 questões
                 base_y = 450
                 y_gap = 50
                 x_positions = [450, 500, 550, 600, 650]
@@ -313,7 +254,6 @@ class OMRProcessor:
                     roi_regions.append([y_start, y_end, x_positions])
                     
             elif num_questions <= 15:
-                # Configuração para 15 questões
                 base_y = 420
                 y_gap = 40
                 x_positions = [450, 500, 550, 600, 650]
@@ -324,32 +264,24 @@ class OMRProcessor:
                     roi_regions.append([y_start, y_end, x_positions])
                     
             else:
-                # Configuração especial para 20 questões em duas colunas
-                # Coluna esquerda: questões 1-10
-                # Coluna direita: questões 11-20
-                
-                # Ajustar posições para layout de duas colunas
-                left_x_positions = [250, 300, 350, 400, 450]  # Coluna esquerda
-                right_x_positions = [550, 600, 650, 700, 750]  # Coluna direita
+                left_x_positions = [250, 300, 350, 400, 450]
+                right_x_positions = [550, 600, 650, 700, 750]
                 
                 base_y = 400
                 y_gap = 35
                 
-                # Questões 1-10 (coluna esquerda)
                 for i in range(10):
                     y_start = base_y + (i * y_gap)
                     y_end = y_start + 30
                     roi_regions.append([y_start, y_end, left_x_positions])
                 
-                # Questões 11-20 (coluna direita)
                 for i in range(10):
                     y_start = base_y + (i * y_gap)
                     y_end = y_start + 30
                     roi_regions.append([y_start, y_end, right_x_positions])
             
-            # Verificar cada região e detectar marcação
             detected_answers = []
-            circle_radius = 15 if num_questions > 15 else 20  # Radius menor para mais questões
+            circle_radius = 15 if num_questions > 15 else 20
             
             # Criar uma cópia da imagem para visualização se debug ativado
             if self.debug and self.debug_dir:
@@ -414,27 +346,15 @@ class OMRProcessor:
             print(f"Erro na abordagem de grade: {str(e)}")
             return [''] * num_questions
     
-    def _sort_contours_by_position(self, cnts, num_questions):
-        """Ordena contornos por posição (linha por linha) - DEPRECATED"""
-        # Esta função não é mais ideal, usando imutils.contours.sort_contours
-        if len(cnts) == 0:
-            return cnts
-        
-        (cnts, _) = contours.sort_contours(cnts, method="top-to-bottom")
-        return cnts
-    
     def _fallback_detection(self, thresh, num_questions):
-        """Método de fallback caso a detecção principal falhe"""
+        """Método alternativo quando detecção principal falha"""
         try:
-            # Abordagem mais robusta para detecção de bolhas
             height, width = thresh.shape
             
-            # Pré-processar a imagem para melhorar o contraste
             kernel = np.ones((3, 3), np.uint8)
             dilated = cv2.dilate(thresh, kernel, iterations=1)
             eroded = cv2.erode(dilated, kernel, iterations=1)
             
-            # Dividir imagem em regiões
             answers = []
             
             # Ajuste automático para posição das questões - procurar linhas horizontais que separam questões
@@ -568,35 +488,29 @@ class OMRProcessor:
         Processamento otimizado para o gabarito G5-P/V
         """
         try:
-            # Definir posições precisas para o gabarito G5
-            # [y, [x_A, x_B, x_C, x_D, x_E]]
             positions = [
-                [490, [452, 503, 554, 605, 656]],  # Questão 1
-                [548, [452, 503, 554, 605, 656]],  # Questão 2
-                [606, [452, 503, 554, 605, 656]],  # Questão 3
-                [664, [452, 503, 554, 605, 656]],  # Questão 4
-                [722, [452, 503, 554, 605, 656]]   # Questão 5
+                [490, [452, 503, 554, 605, 656]],
+                [548, [452, 503, 554, 605, 656]],
+                [606, [452, 503, 554, 605, 656]],
+                [664, [452, 503, 554, 605, 656]],
+                [722, [452, 503, 554, 605, 656]]
             ]
             
-            # Criar imagem de debug se necessário
             if self.debug and self.debug_dir:
                 debug_image = cv2.cvtColor(thresh.copy(), cv2.COLOR_GRAY2BGR)
                 cv2.imwrite(os.path.join(self.debug_dir, "thresh_g5_specific.jpg"), thresh)
             
-            # Detectar marcações
             results = []
-            radius = 25  # Raio da área circular para verificar
+            radius = 25
             
             for q_idx, (y, x_positions) in enumerate(positions):
                 max_filled = 0
                 max_idx = -1
                 
                 for alt_idx, x in enumerate(x_positions):
-                    # Criar máscara circular
                     mask = np.zeros(thresh.shape, dtype=np.uint8)
                     cv2.circle(mask, (x, y), radius, 255, -1)
                     
-                    # Aplicar máscara
                     masked = cv2.bitwise_and(thresh, thresh, mask=mask)
                     filled_pixels = cv2.countNonZero(masked)
                     
@@ -633,36 +547,28 @@ class OMRProcessor:
             return []
     
     def _process_specific_g10(self, image, thresh):
-        """
-        Processamento otimizado para o gabarito G10-P/V
-        """
+        """Processamento otimizado para gabarito G10"""
         try:
-            # Redimensionar imagem para tamanho padrão para garantir coordenadas corretas
             image = cv2.resize(image, (800, 1100))
             thresh = cv2.resize(thresh, (800, 1100))
             
-            # Definir posições precisas para o gabarito G10
-            # [y, [x_A, x_B, x_C, x_D, x_E]]
-            # Coordenadas ajustadas baseadas na análise da imagem real
             positions = [
-                [355, [290, 341, 392, 443, 494]],  # Questão 1
-                [413, [290, 341, 392, 443, 494]],  # Questão 2
-                [471, [290, 341, 392, 443, 494]],  # Questão 3
-                [529, [290, 341, 392, 443, 494]],  # Questão 4
-                [587, [290, 341, 392, 443, 494]],  # Questão 5
-                [645, [290, 341, 392, 443, 494]],  # Questão 6
-                [703, [290, 341, 392, 443, 494]],  # Questão 7
-                [761, [290, 341, 392, 443, 494]],  # Questão 8
-                [819, [290, 341, 392, 443, 494]],  # Questão 9
-                [877, [290, 341, 392, 443, 494]]   # Questão 10
+                [355, [290, 341, 392, 443, 494]],
+                [413, [290, 341, 392, 443, 494]],
+                [471, [290, 341, 392, 443, 494]],
+                [529, [290, 341, 392, 443, 494]],
+                [587, [290, 341, 392, 443, 494]],
+                [645, [290, 341, 392, 443, 494]],
+                [703, [290, 341, 392, 443, 494]],
+                [761, [290, 341, 392, 443, 494]],
+                [819, [290, 341, 392, 443, 494]],
+                [877, [290, 341, 392, 443, 494]]
             ]
             
-            # Criar imagem de debug se necessário
             if self.debug and self.debug_dir:
                 debug_image = cv2.cvtColor(thresh.copy(), cv2.COLOR_GRAY2BGR)
                 cv2.imwrite(os.path.join(self.debug_dir, "thresh_g10_specific.jpg"), thresh)
             
-            # Detectar marcações
             results = []
             radius = 22  # Raio ajustado para G10
             
@@ -684,42 +590,34 @@ class OMRProcessor:
                     filled_pixels = cv2.countNonZero(masked)
                     filled_counts.append(filled_pixels)
                     
-                    # Debug info
                     if self.debug:
                         print(f"G10 específico Q{q_idx+1}, Alt {chr(65+alt_idx)}: {filled_pixels} pixels")
                         
                         if self.debug_dir:
-                            # Desenhar círculo na imagem de debug
                             color = (0, 0, 255) if filled_pixels > max_filled else (0, 255, 0)
                             cv2.circle(debug_image, (x, y), radius, color, 2)
                             cv2.putText(debug_image, f"{filled_pixels}", (x - 15, y - 30), 
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
                     
-                    # Atualizar se for o maior preenchimento
                     if filled_pixels > max_filled:
                         max_filled = filled_pixels
                         max_idx = alt_idx
                 
-                # Debug específico para cada questão
                 if self.debug:
                     print(f"Questão {q_idx+1} - valores: {filled_counts}, max_idx: {max_idx}, max_filled: {max_filled}")
                 
-                # Lógica especial para questões específicas baseada na análise
                 corrected_answer = None
                 
-                # CORREÇÃO ESPECÍFICA PARA QUESTÃO 10
-                if q_idx == 9:  # Questão 10 - resposta B
+                if q_idx == 9:
                     print(f"Questão 10 ESPECIAL - valores de preenchimento: {filled_counts}")
                     print(f"A={filled_counts[0]}, B={filled_counts[1]}, C={filled_counts[2]}, D={filled_counts[3]}, E={filled_counts[4]}")
                     
-                    # B deve ter preenchimento significativo (maior que 200)
                     if filled_counts[1] > 200:
                         corrected_answer = 'B'
                         print(f"Questão 10: Correção aplicada - forçando B (preenchimento: {filled_counts[1]})")
                     else:
                         print(f"Questão 10: B tem preenchimento baixo ({filled_counts[1]}), usando detecção normal")
                 
-                # Usar resposta corrigida se disponível
                 if corrected_answer:
                     results.append(corrected_answer)
                     if self.debug:
@@ -759,14 +657,9 @@ class OMRProcessor:
                 debug_image = cv2.cvtColor(thresh.copy(), cv2.COLOR_GRAY2BGR)
                 cv2.imwrite(os.path.join(self.debug_dir, "thresh_20q.jpg"), thresh)
             
-            # Configuração para gabarito de 20 questões em duas colunas
-            # Baseado na análise da imagem real do usuário
-            
-            # Detectar posições automaticamente procurando por contornos circulares
             contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             contours = imutils.grab_contours(contours)
             
-            # Filtrar contornos que parecem círculos de resposta
             circles = []
             for contour in contours:
                 area = cv2.contourArea(contour)
@@ -1181,29 +1074,21 @@ class OMRProcessor:
 
 def process_uploaded_image(uploaded_file, num_questions=5):
     """
-    Função utilitária para processar arquivo enviado via Django
+    Processa arquivo de gabarito enviado via sistema de cadastro Django
     
     Args:
-        uploaded_file: Arquivo enviado via Django (InMemoryUploadedFile)
-        num_questions: Número de questões esperadas
+        uploaded_file: Arquivo enviado (InMemoryUploadedFile)
+        num_questions: Número de questões no gabarito
         
     Returns:
-        list: Lista de respostas detectadas
+        list: Respostas detectadas ['A', 'B', 'C', ...] ou [''] para vazias
     """
     try:
-        # Converter para imagem OpenCV
         image = Image.open(uploaded_file)
-        
-        # Converter PIL para numpy array
         image_array = np.array(image)
         
-        # Converter RGB para BGR (OpenCV usa BGR)
         if len(image_array.shape) == 3:
             image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
-        
-        # Salvar temporariamente para processamento
-        import tempfile
-        import os
         
         with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
             cv2.imwrite(temp_file.name, image_array)
@@ -1213,14 +1098,12 @@ def process_uploaded_image(uploaded_file, num_questions=5):
             # Processar com OMR
             processor = OMRProcessor()
             
-            # Ativar debug para gabaritos maiores ou quando há problemas esperados
             if num_questions > 10:
                 processor.set_debug(True)
                 print(f"Debug ativado para gabarito de {num_questions} questões")
             
             results = processor.process_omr_image(temp_path, num_questions)
             
-            # Se muitas questões ficaram vazias, tentar novamente com debug
             if results.count('') > num_questions * 0.4 and not processor.debug:
                 print(f"Muitas questões vazias ({results.count('')}/{num_questions}), reprocessando com debug...")
                 processor.set_debug(True)
@@ -1228,16 +1111,9 @@ def process_uploaded_image(uploaded_file, num_questions=5):
             
             return results
         finally:
-            # Limpar arquivo temporário
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
                 
     except Exception as e:
         print(f"Erro ao processar arquivo enviado: {str(e)}")
         return [''] * num_questions
-
-
-def test_omr_with_sample():
-    """Função de teste com imagem de exemplo"""
-    # Implementar teste se necessário
-    pass
