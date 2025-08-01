@@ -1,8 +1,3 @@
-"""
-Módulo para processamento OMR (Optical Mark Recognition)
-Utiliza OpenCV para detectar marcações em gabaritos de múltipla escolha
-"""
-
 import cv2
 import numpy as np
 from PIL import Image
@@ -25,7 +20,7 @@ class OMRProcessor:
         """Ativa/desativa modo debug para visualização"""
         self.debug = debug
         if debug:
-            # Criar diretório para salvar imagens de debug
+            # Cria diretório de debug se não existir
             self.debug_dir = os.path.join(os.path.dirname(__file__), '..', 'debug_omr')
             os.makedirs(self.debug_dir, exist_ok=True)
     

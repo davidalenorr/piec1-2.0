@@ -4,6 +4,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # URL para a página inicial
     path('', views.index, name='index'),
     path('cadastrar_disciplina/', views.cadastrar_disciplina, name='cadastrar_disciplina'),
     path('cadastrar_aluno/', views.cadastrar_aluno, name='cadastrar_aluno'),

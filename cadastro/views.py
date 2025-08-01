@@ -971,8 +971,8 @@ def gerar_pdf_prova(request, prova_id):
             'disciplina': prova.disciplina,
             'prova_id': prova.id,
             'gabarito_salvo': True,
-            'modo_pdf': True,  # Flag para indicar que é modo PDF
-            'professor_nome': professor.nome,  # Adicionar nome do professor
+            'modo_pdf': True,  
+            'professor_nome': professor.nome,  
             'data_criacao': prova.data_criacao
         })
         

@@ -40,8 +40,8 @@ class Questao(models.Model):
     alternativa_d = models.CharField(max_length=500)
     alternativa_e = models.CharField(max_length=500)
     resposta_correta = models.CharField(max_length=1, choices=ALTERNATIVAS_CHOICES)
-    cpf_professor = models.CharField(max_length=11)  # Para compatibilidade com o sistema atual
-    disciplina_nome = models.CharField(max_length=100)  # Para facilitar consultas
+    cpf_professor = models.CharField(max_length=11)  
+    disciplina_nome = models.CharField(max_length=100)  
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -57,8 +57,8 @@ class Prova(models.Model):
     professor = models.ForeignKey(Professor, on_delete=models.CASCADE, related_name='provas')
     quantidade_questoes = models.IntegerField()
     data_criacao = models.DateTimeField(auto_now_add=True)
-    questoes_ids = models.TextField()  # Armazenar IDs das questões como JSON
-    
+    questoes_ids = models.TextField()
+
     def __str__(self):
         return f"{self.titulo} - {self.disciplina} ({self.quantidade_questoes} questões)"
     
@@ -82,7 +82,7 @@ class Prova(models.Model):
 
 class GabaritoProva(models.Model):
     prova = models.OneToOneField(Prova, on_delete=models.CASCADE, related_name='gabarito')
-    respostas_corretas = models.TextField()  # JSON com {questao_id: resposta_correta}
+    respostas_corretas = models.TextField()
     data_criacao = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -151,5 +151,5 @@ class ResultadoAluno(models.Model):
     class Meta:
         verbose_name = "Resultado do Aluno"
         verbose_name_plural = "Resultados dos Alunos"
-        unique_together = ['aluno', 'prova']  # Um aluno só pode fazer a mesma prova uma vez
+        unique_together = ['aluno', 'prova'] 
         ordering = ['-data_realizacao']

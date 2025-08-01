@@ -1,6 +1,3 @@
-/* ===== VERSÃO 16 - SEM SCROLL GLOBAL, SCROLL INTERNO NO PAINEL ===== */
-
-/* Configuração global - sem scroll na página */
 html {
     height: 100%;
     overflow: hidden;
